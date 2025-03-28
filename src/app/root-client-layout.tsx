@@ -1,14 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { usePathname } from 'next/navigation'
+import { ReactNode, useEffect } from 'react'
 const NextThemesProvider = dynamic(() => import('next-themes').then((e) => e.ThemeProvider), {
   ssr: false,
 })
-import { usePathname } from 'next/navigation'
-import { type ReactNode, useEffect } from 'react'
-import { Toaster } from 'sonner'
 
-export function ClientLayout({ children }: { children: ReactNode }) {
+export function ClientRootLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
@@ -16,9 +15,8 @@ export function ClientLayout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   return (
-    <NextThemesProvider attribute='class' defaultTheme='dark'>
-      <div className='min-h-screen'>{children}</div>
-      <Toaster position='top-center' />
+    <NextThemesProvider attribute='class' defaultTheme='light' enableSystem={false}>
+      {children}
     </NextThemesProvider>
   )
 }

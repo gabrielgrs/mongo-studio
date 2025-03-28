@@ -1,28 +1,27 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { ClientLayout } from './root-client-layout'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
+import { Toaster } from '@/components/ui/sonner'
+import { cn } from '@/utils/cn'
+import type { Metadata } from 'next'
+import { Poppins as Font } from 'next/font/google'
+import type { ReactNode } from 'react'
+import { ClientRootLayout } from './root-client-layout'
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+const font = Font({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
-  title: 'MongoDB Studio',
-  description: 'Studio to manage mongodb data',
+  title: 'MongoDB Admin',
+  description: 'A MongoDB admin interface with connection, browsing, and query capabilities',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClientLayout>{children}</ClientLayout>
+      <body className={cn(font.className, 'min-h-screen')}>
+        <ClientRootLayout>
+          {children}
+          <Toaster />
+        </ClientRootLayout>
       </body>
     </html>
   )
