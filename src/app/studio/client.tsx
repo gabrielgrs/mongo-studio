@@ -10,7 +10,6 @@ import {
 } from '@/actions/mongodb'
 import JsonEditor from '@/components/json-editor'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -285,19 +284,17 @@ export function StudioClient() {
               </div>
             )}
 
-            {tabs.length > 0 && selectedCollection && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Query & Insert</CardTitle>
-                  <CardDescription>Execute MongoDB queries or insert new documents</CardDescription>
-                </CardHeader>
-                <CardContent>
+            <main className='bg-foreground/5 border shadow px-4 py-6 rounded-lg min-h-max'>
+              {tabs.length > 0 && selectedCollection && (
+                <>
+                  <h2>Query & Insert</h2>
+                  <p className='text-muted-foreground'>Execute MongoDB queries or insert new documents</p>
                   <Tabs defaultValue='query' className='w-full'>
-                    <TabsList className='mx-4 mt-2'>
+                    <TabsList className='mt-2'>
                       <TabsTrigger value='query'>Query</TabsTrigger>
                       <TabsTrigger value='insert'>Insert</TabsTrigger>
                     </TabsList>
-                    <TabsContent value='query' className='p-2'>
+                    <TabsContent value='query'>
                       <JsonEditor
                         initialValue={{ name: 'John' }}
                         submitText='Execute'
@@ -327,111 +324,98 @@ export function StudioClient() {
                       />
                     </TabsContent>
                   </Tabs>
+                </>
+              )}
 
-                  {/* <QueryEditor onExecute={() => onExecuteQuery()} /> */}
-                </CardContent>
-              </Card>
-            )}
+              {documentsToShow ? (
+                <span className='flex items-center gap-1'>
+                  {selectedDatabase}.{selectedCollection}
+                  <span className='text-sm font-normal text-muted-foreground'>
+                    ({totalDocuments} document{totalDocuments < 2 ? '' : 's'})
+                  </span>
+                </span>
+              ) : (
+                'Select a collection'
+              )}
 
-            <Card className='p-4'>
-              <CardHeader>
-                <CardTitle>
-                  {documentsToShow ? (
-                    <span className='flex items-center gap-1'>
-                      {selectedDatabase}.{selectedCollection}
-                      <span className='text-sm font-normal text-muted-foreground ml-2'>
-                        ({totalDocuments} document{totalDocuments < 2 ? '' : 's'})
-                      </span>
-                    </span>
-                  ) : (
-                    'Select a collection'
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className='p-0'>
-                {documentsToShow ? (
-                  <div className='p-2 space-y-2'>
-                    {documentsToShow.map((doc) => (
-                      <div key={doc._id} className='border rounded-md mb-2'>
-                        <button
-                          onClick={() => onSelectDocument(doc._id)}
-                          className={`w-full flex items-center justify-between p-3 text-sm hover:bg-accent ${
-                            expandedDocuments.includes(doc._id) ? 'bg-accent' : ''
-                          }`}
-                        >
-                          <div className='font-mono text-xs truncate flex-1 text-left'>
-                            {JSON.stringify(doc).substring(0, 60)}...
-                          </div>
-                          <ChevronRight
-                            size={20}
-                            className={cn('duration-500', expandedDocuments.includes(doc._id) && 'rotate-90')}
-                          />
-                        </button>
+              {documentsToShow ? (
+                <div className='space-y-2'>
+                  {documentsToShow.map((doc) => (
+                    <div key={doc._id} className='border rounded-md'>
+                      <button
+                        onClick={() => onSelectDocument(doc._id)}
+                        className={`w-full flex items-center justify-between p-3 text-sm hover:bg-accent ${
+                          expandedDocuments.includes(doc._id) ? 'bg-accent' : ''
+                        }`}
+                      >
+                        <div className='font-mono text-xs truncate flex-1 text-left'>
+                          {JSON.stringify(doc).substring(0, 60)}...
+                        </div>
+                        <ChevronRight
+                          size={20}
+                          className={cn('duration-500', expandedDocuments.includes(doc._id) && 'rotate-90')}
+                        />
+                      </button>
 
-                        <AnimatePresence>
-                          {expandedDocuments.includes(doc._id) && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
-                              className='border-t'
-                            >
-                              <div className='p-3 bg-muted/30'>
-                                <div className='flex justify-between items-center mb-2'>
-                                  <h4 className='text-sm font-medium'>Document Preview</h4>
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    onClick={() => setSelectedDocumentToEdit(doc._id)}
-                                  >
-                                    Edit
-                                  </Button>
-                                </div>
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ delay: 0.1, duration: 0.2 }}
-                                >
-                                  {selectedDocumentToEdit === doc._id ? (
-                                    <JsonEditor
-                                      initialValue={doc}
-                                      onSubmit={(value) =>
-                                        updateDocumentAction.execute({
-                                          uri: databaseUri,
-                                          database: selectedDatabase,
-                                          collection: selectedCollection,
-                                          data: value,
-                                          documentId: doc._id,
-                                        })
-                                      }
-                                      onCancel={() => setSelectedDocumentToEdit('')}
-                                      rows={Object.keys(doc).length + 2}
-                                      // onChange={setSelectedDocumentToEdit}
-                                    />
-                                  ) : (
-                                    <pre className='text-xs font-mono whitespace-pre-wrap bg-muted p-3 rounded-md overflow-auto'>
-                                      {JSON.stringify(doc, null, 2)}
-                                    </pre>
-                                  )}
-                                </motion.div>
+                      <AnimatePresence>
+                        {expandedDocuments.includes(doc._id) && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className='border-t'
+                          >
+                            <div className='p-3 bg-muted/30'>
+                              <div className='flex justify-between items-center mb-2'>
+                                <h4 className='text-sm font-medium'>Document Preview</h4>
+                                <Button variant='outline' size='sm' onClick={() => setSelectedDocumentToEdit(doc._id)}>
+                                  Edit
+                                </Button>
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
-                    {(!documentsToShow || documentsToShow.length === 0) && (
-                      <div className='text-center text-muted-foreground p-4'>No documents found</div>
-                    )}
-                  </div>
-                ) : (
-                  <div className='flex items-center justify-center text-muted-foreground'>
-                    Select a collection from the sidebar to view documents
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.1, duration: 0.2 }}
+                              >
+                                {selectedDocumentToEdit === doc._id ? (
+                                  <JsonEditor
+                                    initialValue={doc}
+                                    onSubmit={(value) =>
+                                      updateDocumentAction.execute({
+                                        uri: databaseUri,
+                                        database: selectedDatabase,
+                                        collection: selectedCollection,
+                                        data: value,
+                                        documentId: doc._id,
+                                      })
+                                    }
+                                    onCancel={() => setSelectedDocumentToEdit('')}
+                                    rows={Object.keys(doc).length + 2}
+                                    // onChange={setSelectedDocumentToEdit}
+                                  />
+                                ) : (
+                                  <pre className='text-xs font-mono whitespace-pre-wrap bg-muted p-3 rounded-md overflow-auto'>
+                                    {JSON.stringify(doc, null, 2)}
+                                  </pre>
+                                )}
+                              </motion.div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                  {(!documentsToShow || documentsToShow.length === 0) && (
+                    <div className='text-center text-muted-foreground p-4'>No documents found</div>
+                  )}
+                </div>
+              ) : (
+                <div className='flex items-center justify-center text-muted-foreground'>
+                  Select a collection from the sidebar to view documents
+                </div>
+              )}
+            </main>
           </motion.div>
         </motion.div>
       </AnimatePresence>
