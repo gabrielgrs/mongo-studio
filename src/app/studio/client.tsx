@@ -12,8 +12,9 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/utils/cn'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Database, Menu, PlusCircle, RefreshCw, X } from 'lucide-react'
+import { ChevronRight, LogOut, Menu, X } from 'lucide-react'
 import { WithId } from 'mongodb'
+import Image from 'next/image'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -123,18 +124,15 @@ export function StudioClient() {
   // Render the sidebar content
   const renderSidebarContent = () => (
     <div className='h-full flex flex-col'>
-      <div className='p-4 flex justify-between items-center'>
+      <div className='p-4 pr-0 flex justify-between items-center'>
         <h2 className='text-lg font-semibold flex items-center gap-2'>
-          <Database className='h-5 w-5 text-primary' />
-          Databases
+          <Image src='/logo.svg' width={24} height={24} alt='Mongo Studio logo' />
+          Mongo Studio
         </h2>
-        <Button
-          variant='outline'
-          size='icon'
-          onClick={() => getDatabasesAction.execute(connectionForm.getValues('uri'))}
-          title='Disconnect'
-        >
-          <RefreshCw className='h-4 w-4' />
+        <ThemeToggle />
+
+        <Button variant='outline' size='icon' onClick={() => window.location.reload()} title='Disconnect'>
+          <LogOut size={16} />
         </Button>
       </div>
       <Separator />
@@ -236,13 +234,28 @@ export function StudioClient() {
         {databases.length > 0 && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
-              <div className='px-4 pt-1'>
-                <Button variant='ghost' size='icon' className='md:hidden'>
-                  <Menu size={20} />
-                </Button>
+              <div className='px-4 pt-1 flex h-20 items-center justify-between gap-2 md:hidden'>
+                <div className='flex items-center gap-2'>
+                  <Button variant='ghost' size='icon'>
+                    <Menu size={20} />
+                  </Button>
+
+                  <h2 className='text-lg font-semibold flex items-center gap-2'>
+                    <Image src='/logo.svg' width={24} height={24} alt='Mongo Studio logo' />
+                    Mongo Studio
+                  </h2>
+                </div>
+
+                <div className='flex items-center gap-2'>
+                  <ThemeToggle />
+
+                  <Button variant='outline' size='icon' onClick={() => window.location.reload()} title='Disconnect'>
+                    <LogOut size={16} />
+                  </Button>
+                </div>
               </div>
             </SheetTrigger>
-            <SheetContent side='left' className='w-[280px] p-0'>
+            <SheetContent side='left' className='w-[280px] p-0' hideClose>
               <SheetTitle></SheetTitle>
               {renderSidebarContent()}
             </SheetContent>
@@ -260,15 +273,6 @@ export function StudioClient() {
             className='hidden md:flex sticky top-0 flex-col justify-between h-full pb-8'
           >
             {renderSidebarContent()}
-            <div className='space-y-4'>
-              {isConnected && (
-                <Button variant='outline' size='sm' onClick={() => getDatabasesAction.reset()}>
-                  <PlusCircle size={20} />
-                  Change connection
-                </Button>
-              )}
-              <ThemeToggle />
-            </div>
           </motion.div>
 
           <motion.div variants={itemVariants} className='space-y-4 p-4'>

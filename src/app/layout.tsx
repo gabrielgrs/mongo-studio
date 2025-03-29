@@ -10,7 +10,7 @@ import { ClientRootLayout } from './root-client-layout'
 const font = Font({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
-  title: 'MongoDB Admin',
+  title: 'Mongo Studio',
   description: 'A MongoDB admin interface with connection, browsing, and query capabilities',
 }
 
