@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/utils/cn'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, LogOut, Menu, X } from 'lucide-react'
+import { ChevronRight, Loader2, LogOut, Menu, X } from 'lucide-react'
 import { WithId } from 'mongodb'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -47,6 +47,7 @@ export function StudioClient() {
   const [cachedDatabases, setCachedDatabases] = useState<Record<string, string[]>>({})
   const [cachedData, setCachedData] = useState<Record<string, { totalItems: number; data: WithId<any>[] }>>({})
   const [expandedDocuments, setExpandedDocuments] = useState<string[]>([])
+  const [tabsLoading, setTabsLoading] = useState<string[]>([])
 
   const connectionForm = useForm({ defaultValues: { uri: '' } })
 
@@ -65,7 +66,10 @@ export function StudioClient() {
   const totalDocuments = cachedData[activeTab]?.totalItems ?? -1
 
   const onSelectDatabase = async (dbName: string) => {
+    const tab = `${dbName}.`
+    setTabsLoading((p) => [...p, tab])
     const [res, err] = await getCollectionsAction.execute({ database: dbName, uri: connectionForm.getValues('uri') })
+    setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
     return setCachedDatabases((prev) => ({ ...prev, [dbName]: res }))
   }
@@ -75,6 +79,8 @@ export function StudioClient() {
     collectionName: string,
     query?: string,
   ) => {
+    const tab = `${databaseName}.${collectionName}`
+    setTabsLoading((p) => [...p, tab])
     const [res, err] = await getCollectionDataAction.execute({
       uri: databaseUri,
       database: databaseName,
@@ -82,12 +88,14 @@ export function StudioClient() {
       query,
       page: 1,
     })
+    setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
+    setIsSidebarOpen(false)
     setCachedData((p) => ({
       ...p,
-      [`${databaseName}.${collectionName}`]: { totalItems: res.totalItems, data: res.data },
+      [tab]: { totalItems: res.totalItems, data: res.data },
     }))
-    setActiveTab(`${databaseName}.${collectionName}`)
+    setActiveTab(tab)
   }
 
   const onCloseTab = (tabIdentifier: string) => {
@@ -142,7 +150,7 @@ export function StudioClient() {
             <div key={databaseName} className='mb-1'>
               <button
                 onClick={() => onSelectDatabase(databaseName)}
-                className='w-full flex items-center gap-1 p-2 hover:bg-accent rounded-md text-left text-sm'
+                className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm'
               >
                 <ChevronRight
                   size={16}
@@ -150,7 +158,9 @@ export function StudioClient() {
                 />
 
                 <span>{databaseName}</span>
-                {/* <span className='text-xs text-muted-foreground ml-1'>({dbName.collections.length})</span> */}
+                {tabsLoading.includes(`${databaseName}.`) && (
+                  <Loader2 size={14} className='animate-spin text-muted-foreground' />
+                )}
               </button>
 
               <AnimatePresence>
@@ -174,7 +184,7 @@ export function StudioClient() {
                               transition={{ duration: 0.2 }}
                               onClick={() => onGetCollectionData(databaseUri, databaseName, collectionName)}
                               className={cn(
-                                'w-full text-left p-2 text-sm relative',
+                                'w-full text-left p-2 text-sm relative flex items-center gap-2 hover:text-primary',
                                 !isActive && 'text-muted-foreground',
                               )}
                             >
@@ -185,6 +195,9 @@ export function StudioClient() {
                                 />
                               )}
                               {collectionName}
+                              {tabsLoading.includes(`${databaseName}.${collectionName}`) && (
+                                <Loader2 size={14} className='animate-spin text-muted-foreground' />
+                              )}
                             </motion.button>
                           )
                         })}
@@ -268,10 +281,7 @@ export function StudioClient() {
           animate='visible'
           className='grid grid-cols-1 md:grid-cols-[280px_1fr] items-start min-h-screen'
         >
-          <motion.div
-            variants={itemVariants}
-            className='hidden md:flex sticky top-0 flex-col justify-between h-full pb-8'
-          >
+          <motion.div variants={itemVariants} className='hidden md:flex sticky top-0 flex-col justify-between pb-8'>
             {renderSidebarContent()}
           </motion.div>
 
@@ -283,7 +293,7 @@ export function StudioClient() {
                     key={tabIdentifier}
                     onClick={() => setActiveTab(tabIdentifier)}
                     className={cn(
-                      `flex items-center gap-1 px-3 py-4 whitespace-nowrap relative duration-500`,
+                      `flex items-center gap-2 px-3 py-4 whitespace-nowrap relative duration-500`,
                       activeTab !== tabIdentifier && 'text-muted-foreground',
                     )}
                   >
@@ -291,17 +301,23 @@ export function StudioClient() {
                       <motion.div layoutId='tab_active' className='absolute left-0 bottom-0 w-full h-0.5 bg-primary' />
                     )}
                     <span className='text-sm font-medium truncate max-w-[120px] sm:max-w-none'>{tabIdentifier}</span>
-                    <X
-                      role='button'
-                      className='h-3.5 w-3.5 ml-1 text-muted-foreground hover:text-foreground'
-                      onClick={() => onCloseTab(tabIdentifier)}
-                    />
+
+                    {tabsLoading.includes(tabIdentifier) ? (
+                      <Loader2 size={14} className='animate-spin text-muted-foreground' />
+                    ) : (
+                      <X
+                        role='button'
+                        size={14}
+                        className='text-muted-foreground hover:text-primary'
+                        onClick={() => onCloseTab(tabIdentifier)}
+                      />
+                    )}
                   </button>
                 ))}
               </div>
             )}
 
-            <main className='bg-foreground/5 border shadow px-4 py-6 rounded-lg min-h-max'>
+            <main className='bg-card border shadow px-4 py-6 rounded-lg min-h-max'>
               {tabs.length > 0 && selectedCollection && (
                 <>
                   <h2>Query & Insert</h2>
@@ -351,8 +367,8 @@ export function StudioClient() {
                     <div key={doc._id} className='border rounded-md'>
                       <button
                         onClick={() => onSelectDocument(doc._id)}
-                        className={`w-full flex items-center justify-between p-3 text-sm hover:bg-accent ${
-                          expandedDocuments.includes(doc._id) ? 'bg-accent' : ''
+                        className={`w-full flex items-center justify-between p-3 text-sm hover:bg-foreground/10 ${
+                          expandedDocuments.includes(doc._id) ? 'bg-foreground/10' : ''
                         }`}
                       >
                         <div className='font-mono text-xs truncate flex-1 text-left'>
@@ -374,17 +390,20 @@ export function StudioClient() {
                             className='border-t'
                           >
                             <div className='p-3 bg-muted/30'>
-                              <div className='flex justify-between items-center mb-2'>
-                                <h4 className='text-sm font-medium'>Document Preview</h4>
-                                <Button variant='outline' size='sm' onClick={() => setSelectedDocumentToEdit(doc._id)}>
-                                  Edit
-                                </Button>
-                              </div>
                               <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.1, duration: 0.2 }}
+                                className='relative'
                               >
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  onClick={() => setSelectedDocumentToEdit(doc._id)}
+                                  className='absolute right-1 top-1'
+                                >
+                                  Edit
+                                </Button>
                                 {selectedDocumentToEdit === doc._id ? (
                                   <JsonEditor
                                     initialValue={doc}
