@@ -1,6 +1,7 @@
 'use server'
 
 import { connectToDatabase } from '@/libs/mongodb'
+import { ObjectId } from 'mongodb'
 import { z } from 'zod'
 import { createServerAction } from 'zsa'
 
@@ -88,4 +89,53 @@ export const executeRawQuery = createServerAction()
     const client = await connectToDatabase(uri, database)
 
     return executeMongoQuery(client.db, query)
+  })
+
+export const createDocument = createServerAction()
+  .input(
+    z.object({
+      uri: z.string(),
+      database: z.string(),
+      collection: z.string(),
+      data: z.any(),
+    }),
+  )
+  .handler(async ({ input: { uri, database, collection, data } }) => {
+    const client = await connectToDatabase(uri, database)
+    const collectionRef = client.db().collection(collection)
+    const result = await collectionRef.insertOne(data)
+    return result.insertedId.toString()
+  })
+
+export const updateDocument = createServerAction()
+  .input(
+    z.object({
+      uri: z.string(),
+      database: z.string(),
+      collection: z.string(),
+      documentId: z.string(),
+      data: z.any(),
+    }),
+  )
+  .handler(async ({ input: { uri, database, collection, documentId, data } }) => {
+    const client = await connectToDatabase(uri, database)
+    const collectionRef = client.db().collection(collection)
+    const result = await collectionRef.findOneAndUpdate({ _id: new ObjectId(documentId) }, { data })
+    return result
+  })
+
+export const queryDocuments = createServerAction()
+  .input(
+    z.object({
+      uri: z.string(),
+      database: z.string(),
+      collection: z.string(),
+      query: z.any(),
+    }),
+  )
+  .handler(async ({ input: { uri, database, collection, query } }) => {
+    const client = await connectToDatabase(uri, database)
+    const collectionRef = client.db().collection(collection)
+    const result = await collectionRef.find(query).toArray()
+    return result
   })

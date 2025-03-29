@@ -119,11 +119,12 @@
   body {
     @apply bg-background text-foreground;
   }
+
   button {
-    cursor: pointer;
+    @apply duration-500 cursor-pointer;
   }
 
   button:disabled {
-    cursor: not-allowed;
+    @apply duration-500 cursor-not-allowed;
   }
 }

@@ -1,103 +1,103 @@
 'use client'
-
-import type React from 'react'
-
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/utils/cn'
 import { motion } from 'framer-motion'
 import { AlertCircle, Check } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
-interface JsonEditorProps {
-  value: any
-  onChange: (value: any) => void
-  readOnly?: boolean
+type JsonEditorProps = {
+  initialValue?: Record<string, unknown>
+  onSubmit: (value: Record<string, unknown>) => void
+  onCancel?: () => void
+  disabled?: boolean
+  submitText?: string
+  rows?: number
 }
 
-export default function JsonEditor({ value, onChange, readOnly = false }: JsonEditorProps) {
-  const [jsonString, setJsonString] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isValid, setIsValid] = useState(true)
-
-  // Update the text area when the value changes
-  useEffect(() => {
-    try {
-      const formatted = JSON.stringify(value, null, 2)
-      setJsonString(formatted)
-      setError(null)
-      setIsValid(true)
-    } catch {
-      setError('Invalid JSON object')
-      setIsValid(false)
-    }
-  }, [value])
-
-  // Handle text changes
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value
-    setJsonString(text)
-
-    try {
-      const parsed = JSON.parse(text)
-      onChange(parsed)
-      setError(null)
-      setIsValid(true)
-    } catch {
-      setError('Invalid JSON syntax')
-      setIsValid(false)
-    }
+const onValidateJSON = (value: string) => {
+  try {
+    JSON.parse(value)
+    return undefined
+  } catch {
+    return 'Invalid JSON'
   }
+}
 
-  // Format the JSON
-  const handleFormat = () => {
+export default function JsonEditor({
+  initialValue,
+  onSubmit,
+  onCancel,
+  disabled = false,
+  submitText = 'Save',
+  rows = 5,
+}: JsonEditorProps) {
+  const form = useForm({
+    mode: 'all',
+    defaultValues: { json: initialValue ? JSON.stringify(initialValue, null, 2) : '' },
+  })
+
+  const isValid = !form.formState.errors.json
+
+  const onFormatJSON = (json: string) => {
     try {
-      const parsed = JSON.parse(jsonString)
-      const formatted = JSON.stringify(parsed, null, 2)
-      setJsonString(formatted)
-      onChange(parsed)
-      setError(null)
-      setIsValid(true)
+      const parsed = JSON.stringify(JSON.parse(json), null, 2)
+      form.setValue('json', parsed)
+      return parsed
     } catch {
-      setError('Cannot format invalid JSON')
+      form.setError('json', {
+        message: 'Invalid JSON',
+      })
     }
   }
 
   return (
-    <div className='space-y-4'>
+    <form className='space-y-4' onSubmit={form.handleSubmit((values) => onSubmit(JSON.parse(values.json)))}>
       <div className='relative'>
         <Textarea
-          value={jsonString}
-          onChange={handleTextChange}
-          className='font-mono text-sm min-h-[200px] resize-y'
+          {...form.register('json', { required: 'Required field', validate: onValidateJSON })}
+          className='font-mono text-sm resize-y'
           placeholder='Enter JSON here...'
-          readOnly={readOnly}
+          disabled={disabled}
+          rows={rows}
         />
 
-        {!readOnly && (
-          <div className='absolute top-2 right-2 flex gap-2'>
-            <Button variant='outline' size='sm' onClick={handleFormat} disabled={!isValid} className='h-7 px-2 text-xs'>
-              Format JSON
-            </Button>
-          </div>
-        )}
-
-        {isValid && !error && !readOnly && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='absolute bottom-2 right-2'>
-            <div className='bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-md flex items-center gap-1'>
-              <Check className='h-3 w-3' />
-              Valid JSON
-            </div>
+        {form.formState.touchedFields.json && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='max-w-max absolute top-2 right-4'>
+            <span
+              className={cn(
+                'text-xs flex items-center gap-1 duration-500',
+                isValid ? 'text-green-500' : 'text-red-500',
+              )}
+            >
+              {isValid ? <Check size={12} /> : <AlertCircle size={12} />}
+              {isValid ? 'Valid' : 'Invalid'} JSON
+            </span>
           </motion.div>
         )}
       </div>
 
-      {error && (
-        <Alert variant='destructive'>
-          <AlertCircle className='h-4 w-4' />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-    </div>
+      <div className='flex justify-end gap-2 items-center'>
+        <Button variant='ghost' size='sm' onClick={() => onFormatJSON(form.getValues('json'))}>
+          Format JSON
+        </Button>
+
+        {onCancel && (
+          <Button
+            size='sm'
+            onClick={() => {
+              if (onCancel) onCancel()
+              return form.reset()
+            }}
+          >
+            Cancel
+          </Button>
+        )}
+
+        <Button size='sm' disabled={!isValid} type='submit' loading={form.formState.isSubmitting}>
+          {submitText}
+        </Button>
+      </div>
+    </form>
   )
 }
