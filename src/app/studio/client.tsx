@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  createDocument,
-  getCollectionData,
-  getCollections,
-  getDatabases,
-  queryDocuments,
-  updateDocument,
-} from '@/actions/mongodb'
+import { createDocument, getCollectionData, getCollections, getDatabases, updateDocument } from '@/actions/mongodb'
 import JsonEditor from '@/components/json-editor'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -60,7 +53,6 @@ export function StudioClient() {
   const { data: collections = [], ...getCollectionsAction } = useServerAction(getCollections)
   const createDocumentAction = useServerAction(createDocument)
   const updateDocumentAction = useServerAction(updateDocument)
-  const queryDocumentsAction = useServerAction(queryDocuments)
 
   const getCollectionDataAction = useServerAction(getCollectionData)
 
@@ -76,11 +68,17 @@ export function StudioClient() {
     if (err) return toast.error(err.message)
     return setCachedDatabases((prev) => ({ ...prev, [dbName]: res }))
   }
-  const onSelectCollection = async (databaseUri: string, databaseName: string, collectionName: string) => {
+  const onGetCollectionData = async (
+    databaseUri: string,
+    databaseName: string,
+    collectionName: string,
+    query?: string,
+  ) => {
     const [res, err] = await getCollectionDataAction.execute({
       uri: databaseUri,
       database: databaseName,
       collection: collectionName,
+      query,
       page: 1,
     })
     if (err) return toast.error(err.message)
@@ -106,6 +104,21 @@ export function StudioClient() {
   const onSelectDocument = (documentId: string) => {
     setExpandedDocuments((p) => (p.includes(documentId) ? p.filter((id) => id !== documentId) : [...p, documentId]))
   }
+
+  const onCreateDocument = async (uri: string, database: string, collection: string, data: string) => {
+    const [_, err] = await createDocumentAction.execute({ uri, database, collection, data })
+    if (err) return toast.error(err.message)
+    return onGetCollectionData(uri, database, collection)
+  }
+
+  // const onExecuteQuery = async (uri: string, database: string, collection: string, query: string) => {
+  //   const [res, err] = await queryDocumentsAction.execute({ uri, database, collection, query })
+  //   if (err) return toast.error(err.message)
+  //   setCachedData((prev) => ({
+  //     ...prev,
+  //     [`${database}.${collection}`]: { totalItems: res.totalItems, data: res.data },
+  //   }))
+  // }
 
   // Render the sidebar content
   const renderSidebarContent = () => (
@@ -161,7 +174,7 @@ export function StudioClient() {
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2 }}
-                              onClick={() => onSelectCollection(databaseUri, databaseName, collectionName)}
+                              onClick={() => onGetCollectionData(databaseUri, databaseName, collectionName)}
                               className={cn(
                                 'w-full text-left p-2 text-sm relative',
                                 !isActive && 'text-muted-foreground',
@@ -298,14 +311,9 @@ export function StudioClient() {
                       <JsonEditor
                         initialValue={{ name: 'John' }}
                         submitText='Execute'
-                        onSubmit={(values) =>
-                          createDocumentAction.execute({
-                            uri: databaseUri,
-                            database: selectedDatabase,
-                            collection: selectedCollection,
-                            data: values,
-                          })
-                        }
+                        onSubmit={(values) => {
+                          onGetCollectionData(databaseUri, selectedDatabase, selectedCollection, JSON.stringify(values))
+                        }}
                       />
                     </TabsContent>
 
@@ -313,14 +321,9 @@ export function StudioClient() {
                       <JsonEditor
                         initialValue={{ name: 'John' }}
                         submitText='Insert'
-                        onSubmit={(values) =>
-                          queryDocumentsAction.execute({
-                            uri: databaseUri,
-                            database: selectedDatabase,
-                            collection: selectedCollection,
-                            query: values,
-                          })
-                        }
+                        onSubmit={(values) => {
+                          onCreateDocument(databaseUri, selectedDatabase, selectedCollection, JSON.stringify(values))
+                        }}
                       />
                     </TabsContent>
                   </Tabs>
@@ -331,7 +334,7 @@ export function StudioClient() {
                 <span className='flex items-center gap-1'>
                   {selectedDatabase}.{selectedCollection}
                   <span className='text-sm font-normal text-muted-foreground'>
-                    ({totalDocuments} document{totalDocuments < 2 ? '' : 's'})
+                    ({documentsToShow.length} of {totalDocuments} document{totalDocuments < 2 ? '' : 's'})
                   </span>
                 </span>
               ) : (
@@ -381,12 +384,12 @@ export function StudioClient() {
                                 {selectedDocumentToEdit === doc._id ? (
                                   <JsonEditor
                                     initialValue={doc}
-                                    onSubmit={(value) =>
+                                    onSubmit={(values) =>
                                       updateDocumentAction.execute({
                                         uri: databaseUri,
                                         database: selectedDatabase,
                                         collection: selectedCollection,
-                                        data: value,
+                                        data: JSON.stringify(values),
                                         documentId: doc._id,
                                       })
                                     }

@@ -27,15 +27,23 @@ export const getCollections = createServerAction()
 const ITEMS_PER_PAGE = 10
 
 export const getCollectionData = createServerAction()
-  .input(z.object({ uri: z.string(), database: z.string(), collection: z.string(), page: z.number() }))
-  .handler(async ({ input: { uri, database, collection, page } }) => {
+  .input(
+    z.object({
+      uri: z.string(),
+      database: z.string(),
+      collection: z.string(),
+      page: z.number(),
+      query: z.string().optional(),
+    }),
+  )
+  .handler(async ({ input: { uri, database, collection, page, query } }) => {
     const client = await connectToDatabase(uri, database)
 
     const totalItems = await client.db().collection(collection).countDocuments()
     const collectionData = await client
       .db()
       .collection(collection)
-      .find()
+      .find(query ? JSON.parse(query) : {})
       .limit(page * ITEMS_PER_PAGE)
       .toArray()
 
@@ -97,13 +105,13 @@ export const createDocument = createServerAction()
       uri: z.string(),
       database: z.string(),
       collection: z.string(),
-      data: z.any(),
+      data: z.string(),
     }),
   )
   .handler(async ({ input: { uri, database, collection, data } }) => {
     const client = await connectToDatabase(uri, database)
     const collectionRef = client.db().collection(collection)
-    const result = await collectionRef.insertOne(data)
+    const result = await collectionRef.insertOne(JSON.parse(data))
     return result.insertedId.toString()
   })
 
@@ -114,28 +122,12 @@ export const updateDocument = createServerAction()
       database: z.string(),
       collection: z.string(),
       documentId: z.string(),
-      data: z.any(),
+      data: z.string(),
     }),
   )
   .handler(async ({ input: { uri, database, collection, documentId, data } }) => {
     const client = await connectToDatabase(uri, database)
     const collectionRef = client.db().collection(collection)
     const result = await collectionRef.findOneAndUpdate({ _id: new ObjectId(documentId) }, { data })
-    return result
-  })
-
-export const queryDocuments = createServerAction()
-  .input(
-    z.object({
-      uri: z.string(),
-      database: z.string(),
-      collection: z.string(),
-      query: z.any(),
-    }),
-  )
-  .handler(async ({ input: { uri, database, collection, query } }) => {
-    const client = await connectToDatabase(uri, database)
-    const collectionRef = client.db().collection(collection)
-    const result = await collectionRef.find(query).toArray()
     return result
   })

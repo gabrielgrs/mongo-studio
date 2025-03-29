@@ -56,7 +56,6 @@ export default function JsonEditor({
       <div className='relative'>
         <Textarea
           {...form.register('json', { required: 'Required field', validate: onValidateJSON })}
-          className='font-mono text-sm resize-y'
           placeholder='Enter JSON here...'
           disabled={disabled}
           rows={rows}
