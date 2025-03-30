@@ -127,4 +127,16 @@
   button:disabled {
     @apply duration-500 cursor-not-allowed;
   }
+
+  h1 {
+    @apply text-2xl md:text-4xl font-extralight;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl font-extralight;
+  }
+
+  h3 {
+    @apply text-lg font-extralight;
+  }
 }
