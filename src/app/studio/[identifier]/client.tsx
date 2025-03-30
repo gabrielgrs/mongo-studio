@@ -1,11 +1,9 @@
 'use client'
 
-import { createDocument, getCollectionData, getCollections, getDatabases, updateDocument } from '@/actions/mongodb'
+import { createDocument, getCollectionData, getCollections, updateDocument } from '@/actions/mongodb'
 import JsonEditor from '@/components/json-editor'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -16,10 +14,8 @@ import { ChevronRight, Loader2, LogOut, Menu, X } from 'lucide-react'
 import { WithId } from 'mongodb'
 import Image from 'next/image'
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
-import { ThemeToggle } from './theme-toggle'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -40,7 +36,7 @@ const itemVariants = {
   },
 }
 
-export function StudioClient() {
+export function StudioClient({ databases, identifier }: { databases: string[]; identifier: string }) {
   const [selectedDocumentToEdit, setSelectedDocumentToEdit] = useState('')
   const [activeTab, setActiveTab] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -49,40 +45,34 @@ export function StudioClient() {
   const [expandedDocuments, setExpandedDocuments] = useState<string[]>([])
   const [tabsLoading, setTabsLoading] = useState<string[]>([])
 
-  const connectionForm = useForm({ defaultValues: { uri: '' } })
-
-  const { data: databases = [], ...getDatabasesAction } = useServerAction(getDatabases)
+  // const { data: databases = [], ...getDatabasesAction } = useServerAction(getDatabases)
   const { data: collections = [], ...getCollectionsAction } = useServerAction(getCollections)
   const createDocumentAction = useServerAction(createDocument)
   const updateDocumentAction = useServerAction(updateDocument)
 
   const getCollectionDataAction = useServerAction(getCollectionData)
 
-  const isConnected = databases.length > 0
-  const databaseUri = useWatch({ control: connectionForm.control, name: 'uri' })
   const tabs = Object.keys(cachedData)
   const [selectedDatabase, selectedCollection] = activeTab.split('.')
   const documentsToShow = cachedData[activeTab]?.data
   const totalDocuments = cachedData[activeTab]?.totalItems ?? -1
 
-  const onSelectDatabase = async (dbName: string) => {
+  const onSelectDatabase = async (id: string, dbName: string) => {
     const tab = `${dbName}.`
     setTabsLoading((p) => [...p, tab])
-    const [res, err] = await getCollectionsAction.execute({ database: dbName, uri: connectionForm.getValues('uri') })
+    const [res, err] = await getCollectionsAction.execute({
+      database: dbName,
+      identifier: id,
+    })
     setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
     return setCachedDatabases((prev) => ({ ...prev, [dbName]: res }))
   }
-  const onGetCollectionData = async (
-    databaseUri: string,
-    databaseName: string,
-    collectionName: string,
-    query?: string,
-  ) => {
+  const onGetCollectionData = async (id: string, databaseName: string, collectionName: string, query?: string) => {
     const tab = `${databaseName}.${collectionName}`
     setTabsLoading((p) => [...p, tab])
     const [res, err] = await getCollectionDataAction.execute({
-      uri: databaseUri,
+      identifier: id,
       database: databaseName,
       collection: collectionName,
       query,
@@ -114,10 +104,10 @@ export function StudioClient() {
     setExpandedDocuments((p) => (p.includes(documentId) ? p.filter((id) => id !== documentId) : [...p, documentId]))
   }
 
-  const onCreateDocument = async (uri: string, database: string, collection: string, data: string) => {
-    const [_, err] = await createDocumentAction.execute({ uri, database, collection, data })
+  const onCreateDocument = async (id: string, database: string, collection: string, data: string) => {
+    const [_, err] = await createDocumentAction.execute({ identifier, database, collection, data })
     if (err) return toast.error(err.message)
-    return onGetCollectionData(uri, database, collection)
+    return onGetCollectionData(id, database, collection)
   }
 
   // const onExecuteQuery = async (uri: string, database: string, collection: string, query: string) => {
@@ -149,7 +139,7 @@ export function StudioClient() {
           {databases.map((databaseName) => (
             <div key={databaseName} className='mb-1'>
               <button
-                onClick={() => onSelectDatabase(databaseName)}
+                onClick={() => onSelectDatabase(identifier, databaseName)}
                 className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm'
               >
                 <ChevronRight
@@ -182,7 +172,7 @@ export function StudioClient() {
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2 }}
-                              onClick={() => onGetCollectionData(databaseUri, databaseName, collectionName)}
+                              onClick={() => onGetCollectionData(identifier, databaseName, collectionName)}
                               className={cn(
                                 'w-full text-left p-2 text-sm relative flex items-center gap-2 hover:text-primary',
                                 !isActive && 'text-muted-foreground',
@@ -215,34 +205,6 @@ export function StudioClient() {
 
   return (
     <>
-      <Dialog open={!isConnected}>
-        <DialogContent hideClose>
-          <DialogTitle>Connect</DialogTitle>
-          <DialogDescription>Type or paste the connection string bellow to connect database</DialogDescription>
-          <form
-            className='grid gap-4'
-            onSubmit={connectionForm.handleSubmit((values) => getDatabasesAction.execute(values.uri))}
-          >
-            <div className='grid gap-2'>
-              <Label htmlFor='connection-string'>Connection String</Label>
-              <Input
-                {...connectionForm.register('uri', { required: 'Required field' })}
-                id='connection-string'
-                placeholder='mongodb://localhost:27017'
-              />
-            </div>
-
-            <Button
-              type='submit'
-              className='w-full'
-              loading={getDatabasesAction.isPending || getDatabasesAction.isSuccess}
-            >
-              Connect
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       <AnimatePresence mode='wait'>
         {databases.length > 0 && (
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -332,7 +294,7 @@ export function StudioClient() {
                         initialValue={{ name: 'John' }}
                         submitText='Execute'
                         onSubmit={(values) => {
-                          onGetCollectionData(databaseUri, selectedDatabase, selectedCollection, JSON.stringify(values))
+                          onGetCollectionData(identifier, selectedDatabase, selectedCollection, JSON.stringify(values))
                         }}
                       />
                     </TabsContent>
@@ -342,7 +304,7 @@ export function StudioClient() {
                         initialValue={{ name: 'John' }}
                         submitText='Insert'
                         onSubmit={(values) => {
-                          onCreateDocument(databaseUri, selectedDatabase, selectedCollection, JSON.stringify(values))
+                          onCreateDocument(identifier, selectedDatabase, selectedCollection, JSON.stringify(values))
                         }}
                       />
                     </TabsContent>
@@ -409,7 +371,7 @@ export function StudioClient() {
                                     initialValue={doc}
                                     onSubmit={(values) =>
                                       updateDocumentAction.execute({
-                                        uri: databaseUri,
+                                        identifier,
                                         database: selectedDatabase,
                                         collection: selectedCollection,
                                         data: JSON.stringify(values),
