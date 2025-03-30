@@ -5,17 +5,14 @@ import { parseData } from '@/utils/action'
 import { ObjectId } from 'mongodb'
 import { z } from 'zod'
 import { createServerAction } from 'zsa'
-import { getConnection, getUserIP, testConnection } from './helpers'
+import { getConnection, testConnection } from './helpers'
 
 export const generateSession = createServerAction()
   .input(z.string())
   .handler(async ({ input: uri }) => {
-    const ip = await getUserIP()
-
     await testConnection(uri)
 
     const session = await db.session.create({
-      ip,
       connectionString: uri,
     })
 

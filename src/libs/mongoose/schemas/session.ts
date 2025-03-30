@@ -4,7 +4,6 @@ import { createMongooseSchema } from '../helpers'
 
 export type Session = WithId<{
   connectionString: string
-  ip: string
   expiresAt: Date
   createdAt: Date
   updatedAt: Date
@@ -17,10 +16,6 @@ export const session = createMongooseSchema<Session>(
   new Schema<Session>(
     {
       connectionString: {
-        type: String,
-        required: true,
-      },
-      ip: {
         type: String,
         required: true,
       },
