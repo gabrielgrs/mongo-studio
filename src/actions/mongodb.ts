@@ -90,6 +90,24 @@ export const createDocument = createServerAction()
     return result.insertedId.toString()
   })
 
+export const removeDatabase = createServerAction()
+  .input(
+    z.object({
+      identifier: z.string(),
+      databaseName: z.string(),
+    }),
+  )
+  .handler(async ({ input: { identifier, databaseName } }) => {
+    if (['admin', 'local'].includes(databaseName)) throw new Error(`Cannot drop ${databaseName} database`)
+
+    const client = await getConnection(identifier)
+    await client.db(databaseName).dropDatabase()
+
+    client.close()
+
+    return { databaseName }
+  })
+
 export const updateDocument = createServerAction()
   .input(
     z.object({
@@ -111,4 +129,54 @@ export const updateDocument = createServerAction()
     client.close()
 
     return parseData(result)
+  })
+
+export const removeDocument = createServerAction()
+  .input(
+    z.object({
+      identifier: z.string(),
+      database: z.string(),
+      collection: z.string(),
+      documentId: z.string(),
+    }),
+  )
+  .handler(async ({ input: { identifier, database, collection, documentId } }) => {
+    const client = await getConnection(identifier, database)
+    const collectionRef = client.db().collection(collection)
+    const result = await collectionRef.findOneAndDelete({ _id: new ObjectId(documentId) })
+
+    client.close()
+
+    return parseData(result)
+  })
+
+export const createCollection = createServerAction()
+  .input(
+    z.object({
+      identifier: z.string(),
+      database: z.string(),
+      name: z.string(),
+    }),
+  )
+  .handler(async ({ input: { identifier, database, name } }) => {
+    const client = await getConnection(identifier, database)
+    await client.db().createCollection(name)
+
+    client.close()
+
+    return { name }
+  })
+
+export const removeCollection = createServerAction()
+  .input(z.object({ identifier: z.string(), database: z.string(), collectionName: z.string() }))
+  .handler(async ({ input: { identifier, database, collectionName } }) => {
+    const client = await getConnection(identifier, database)
+    await client.db().collection(collectionName).drop()
+
+    client.close()
+
+    return {
+      database,
+      collectionName,
+    }
   })

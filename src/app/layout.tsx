@@ -3,7 +3,7 @@ import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/utils/cn'
 import type { Metadata } from 'next'
-import { Poppins as Font } from 'next/font/google'
+import { Geist as Font } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { ClientRootLayout } from './root-client-layout'
 

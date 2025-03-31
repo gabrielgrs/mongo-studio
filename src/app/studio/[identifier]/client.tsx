@@ -1,6 +1,14 @@
 'use client'
 
-import { createDocument, getCollectionData, getCollections, updateDocument } from '@/actions/mongodb'
+import {
+  createDocument,
+  getCollectionData,
+  getCollections,
+  removeCollection,
+  removeDatabase,
+  updateDocument,
+} from '@/actions/mongodb'
+import { AreYouSure } from '@/components/are-you-sure'
 import JsonEditor from '@/components/json-editor'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -10,7 +18,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/utils/cn'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Loader2, LogOut, Menu, X } from 'lucide-react'
+import { ChevronRight, Loader2, LogOut, Menu, Trash, X } from 'lucide-react'
 import { WithId } from 'mongodb'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -36,12 +44,15 @@ const itemVariants = {
   },
 }
 
-export function StudioClient({ databases, identifier }: { databases: string[]; identifier: string }) {
+type CollectionWithIdentifier = Record<string, { totalItems: number; data: WithId<any>[] }>
+
+export function StudioClient({ databases: initialDatabases, identifier }: { databases: string[]; identifier: string }) {
+  const [databases, setDatabases] = useState(initialDatabases)
   const [selectedDocumentToEdit, setSelectedDocumentToEdit] = useState('')
   const [activeTab, setActiveTab] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [cachedDatabases, setCachedDatabases] = useState<Record<string, string[]>>({})
-  const [cachedData, setCachedData] = useState<Record<string, { totalItems: number; data: WithId<any>[] }>>({})
+  const [openDatabases, setOpenDatabases] = useState<Record<string, string[]>>({})
+  const [openCollectionsWithIdentifiers, setOpenCollectionsWithIdentifiers] = useState<CollectionWithIdentifier>({})
   const [expandedDocuments, setExpandedDocuments] = useState<string[]>([])
   const [tabsLoading, setTabsLoading] = useState<string[]>([])
 
@@ -49,13 +60,47 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
   const { data: collections = [], ...getCollectionsAction } = useServerAction(getCollections)
   const createDocumentAction = useServerAction(createDocument)
   const updateDocumentAction = useServerAction(updateDocument)
+  const removeDatabaseAction = useServerAction(removeDatabase, {
+    onSuccess: ({ data }) => {
+      setDatabases((p) => p.filter((x) => x !== data.databaseName))
+      setOpenDatabases((p) => {
+        const newOpenDatabases = { ...p }
+        delete newOpenDatabases[data.databaseName]
+        return newOpenDatabases
+      })
+      setOpenCollectionsWithIdentifiers((p) => {
+        const newOpenCollectionsWithIdentifiers = { ...p }
+        const identifiers = Object.keys(newOpenCollectionsWithIdentifiers).filter((item) =>
+          item.includes(data.databaseName),
+        )
+        identifiers.forEach((item) => delete newOpenCollectionsWithIdentifiers[item])
+        return newOpenCollectionsWithIdentifiers
+      })
+    },
+  })
+  const removeCollectionAction = useServerAction(removeCollection, {
+    onSuccess: ({ data }) => {
+      setOpenCollectionsWithIdentifiers((p) => {
+        const newOpenCollectionsWithIdentifiers = { ...p }
+        delete newOpenCollectionsWithIdentifiers[`${data.database}.${data.collectionName}`]
+        return newOpenCollectionsWithIdentifiers
+      })
+      setOpenDatabases((p) => {
+        const newOpenDatabases = { ...p }
+        newOpenDatabases[data.database] = newOpenDatabases[data.database].filter(
+          (collectionName) => collectionName !== data.collectionName,
+        )
+        return newOpenDatabases
+      })
+    },
+  })
 
   const getCollectionDataAction = useServerAction(getCollectionData)
 
-  const tabs = Object.keys(cachedData)
+  const tabs = Object.keys(openCollectionsWithIdentifiers)
   const [selectedDatabase, selectedCollection] = activeTab.split('.')
-  const documentsToShow = cachedData[activeTab]?.data
-  const totalDocuments = cachedData[activeTab]?.totalItems ?? -1
+  const documentsToShow = openCollectionsWithIdentifiers[activeTab]?.data
+  const totalDocuments = openCollectionsWithIdentifiers[activeTab]?.totalItems ?? -1
 
   const onSelectDatabase = async (id: string, dbName: string) => {
     const tab = `${dbName}.`
@@ -66,7 +111,7 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
     })
     setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
-    return setCachedDatabases((prev) => ({ ...prev, [dbName]: res }))
+    return setOpenDatabases((prev) => ({ ...prev, [dbName]: res }))
   }
   const onGetCollectionData = async (id: string, databaseName: string, collectionName: string, query?: string) => {
     const tab = `${databaseName}.${collectionName}`
@@ -81,7 +126,7 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
     setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
     setIsSidebarOpen(false)
-    setCachedData((p) => ({
+    setOpenCollectionsWithIdentifiers((p) => ({
       ...p,
       [tab]: { totalItems: res.totalItems, data: res.data },
     }))
@@ -93,7 +138,7 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
     const t = tabIndex > 0 ? tabs[tabIndex] : tabs[0]
     setActiveTab(t)
 
-    setCachedData((prev) => {
+    setOpenCollectionsWithIdentifiers((prev) => {
       const newData = { ...prev }
       delete newData[tabIdentifier]
       return newData
@@ -110,16 +155,6 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
     return onGetCollectionData(id, database, collection)
   }
 
-  // const onExecuteQuery = async (uri: string, database: string, collection: string, query: string) => {
-  //   const [res, err] = await queryDocumentsAction.execute({ uri, database, collection, query })
-  //   if (err) return toast.error(err.message)
-  //   setCachedData((prev) => ({
-  //     ...prev,
-  //     [`${database}.${collection}`]: { totalItems: res.totalItems, data: res.data },
-  //   }))
-  // }
-
-  // Render the sidebar content
   const renderSidebarContent = () => (
     <div className='h-full flex flex-col'>
       <div className='p-4 pr-0 flex justify-between items-center'>
@@ -137,38 +172,57 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
       <ScrollArea className='flex-1'>
         <div className='p-2'>
           {databases.map((databaseName) => (
-            <div key={databaseName} className='mb-1'>
-              <button
-                onClick={() => onSelectDatabase(identifier, databaseName)}
-                className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm'
-              >
-                <ChevronRight
-                  size={16}
-                  className={cn('text-muted-foreground duration-500', cachedDatabases[databaseName] && 'rotate-90')}
-                />
+            <div key={databaseName}>
+              <div className='flex items-center gap-1'>
+                <button
+                  onClick={() => onSelectDatabase(identifier, databaseName)}
+                  className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm relative'
+                >
+                  <ChevronRight
+                    size={16}
+                    className={cn('text-muted-foreground duration-500', openDatabases[databaseName] && 'rotate-90')}
+                  />
 
-                <span>{databaseName}</span>
-                {tabsLoading.includes(`${databaseName}.`) && (
-                  <Loader2 size={14} className='animate-spin text-muted-foreground' />
+                  <span className='whitespace-nowrap'>{databaseName}</span>
+                  <div className='absolute right-2 top-[50%] translate-y-[-50%] z-50'>
+                    {tabsLoading.includes(`${databaseName}.`) && (
+                      <Loader2 size={14} className='animate-spin text-muted-foreground' />
+                    )}
+                  </div>
+                </button>
+
+                {openDatabases[databaseName] && (
+                  <AreYouSure
+                    confirmationText={databaseName}
+                    onConfirm={() => removeDatabaseAction.execute({ identifier, databaseName })}
+                    loading={removeDatabaseAction.isPending}
+                  >
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      className='text-muted-foreground hover:text-destructive duration-500'
+                    >
+                      <Trash role='button' size={14} />
+                    </Button>
+                  </AreYouSure>
                 )}
-              </button>
+              </div>
 
               <AnimatePresence>
-                {cachedDatabases[databaseName] && (
-                  <div>
-                    <ScrollArea className='max-w-lg'>
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className='ml-4 pl-1 border-l py-1'
-                      >
-                        {cachedDatabases[databaseName].map((collectionName) => {
-                          const isActive = activeTab === `${databaseName}.${collectionName}`
-                          return (
+                {openDatabases[databaseName] && (
+                  <div className='pr-1'>
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className='ml-4 pl-1 border-l py-1'
+                    >
+                      {openDatabases[databaseName].map((collectionName) => {
+                        const isActive = activeTab === `${databaseName}.${collectionName}`
+                        return (
+                          <div key={collectionName} className='flex items-center gap-1'>
                             <motion.button
-                              key={collectionName}
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2 }}
@@ -189,10 +243,29 @@ export function StudioClient({ databases, identifier }: { databases: string[]; i
                                 <Loader2 size={14} className='animate-spin text-muted-foreground' />
                               )}
                             </motion.button>
-                          )
-                        })}
-                      </motion.div>
-                    </ScrollArea>
+                            <AreYouSure
+                              confirmationText={collectionName}
+                              onConfirm={() =>
+                                removeCollectionAction.execute({
+                                  identifier,
+                                  database: databaseName,
+                                  collectionName,
+                                })
+                              }
+                              loading={removeCollectionAction.isPending}
+                            >
+                              <Button
+                                size='icon'
+                                variant='ghost'
+                                className='text-muted-foreground hover:text-destructive duration-500'
+                              >
+                                <Trash role='button' size={14} />
+                              </Button>
+                            </AreYouSure>
+                          </div>
+                        )
+                      })}
+                    </motion.div>
                   </div>
                 )}
               </AnimatePresence>
