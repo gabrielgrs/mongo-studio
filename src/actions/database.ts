@@ -16,6 +16,23 @@ export const getDatabases = createServerAction()
     return databases.map((item) => item.name)
   })
 
+export const createDatabase = createServerAction()
+  .input(
+    z.object({
+      identifier: z.string(),
+      databaseName: z.string(),
+      collectionName: z.string(),
+    }),
+  )
+  .handler(async ({ input: { identifier, databaseName, collectionName } }) => {
+    const client = await getConnection(identifier)
+    await client.db(databaseName).createCollection(collectionName)
+
+    client.close()
+
+    return { databaseName }
+  })
+
 export const removeDatabase = createServerAction()
   .input(
     z.object({

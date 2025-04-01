@@ -152,6 +152,7 @@ export function StudioClient({
   return (
     <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto] bg-background')}>
       <Sidebar
+        sessionIdentifier={sessionIdentifier}
         databases={databases}
         showSidebar={showSidebar}
         onSelectDatabase={(database) => onSelectDatabase(sessionIdentifier, database)}

@@ -2,12 +2,15 @@
 
 import { AreYouSure } from '@/components/are-you-sure'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/utils/cn'
 import { ChevronRight, Ellipsis, Loader2, Trash } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
+import { DatabaseFormModal } from './database-form-modal'
 
 type Props = {
+  sessionIdentifier: string
   databases: string[]
   showSidebar: boolean
   openDatabases: Record<string, string[]>
@@ -21,6 +24,7 @@ type Props = {
   isRemovingCollection: boolean
 }
 export function Sidebar({
+  sessionIdentifier,
   databases,
   showSidebar,
   onSelectDatabase,
@@ -49,6 +53,10 @@ export function Sidebar({
       </div>
 
       <div className='p-2'>
+        <div className='flex items-center justify-between'>
+          <Label>Databases</Label>
+          <DatabaseFormModal sessionIdentifier={sessionIdentifier} onAddDatabase={() => {}} />
+        </div>
         {databases.map((databaseName) => (
           <div key={databaseName}>
             <div className='flex items-center gap-1'>
