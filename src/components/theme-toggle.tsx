@@ -17,8 +17,13 @@ export function ThemeToggle() {
   if (!mounted) return null
 
   return (
-    <Button variant='outline' size='icon' onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-      {theme === 'dakk' ? <Moon size={20} /> : <Sun size={20} />}
+    <Button
+      variant='outline'
+      size='icon'
+      className='h-8 w-8'
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+    >
+      {theme === 'dakk' ? <Moon size={18} /> : <Sun size={18} />}
     </Button>
   )
 }

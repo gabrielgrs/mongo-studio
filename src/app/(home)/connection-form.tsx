@@ -1,6 +1,6 @@
 'use client'
 
-import { generateSession } from '@/actions/mongodb'
+import { generateSession } from '@/actions'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'

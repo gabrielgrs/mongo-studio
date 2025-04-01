@@ -8,7 +8,7 @@ import { Label } from './ui/label'
 
 type Props = {
   children: ReactNode
-  onConfirm: () => Promise<[unknown, unknown]>
+  onConfirm: () => Promise<unknown>
   title?: string
   message?: string
   loading: boolean
