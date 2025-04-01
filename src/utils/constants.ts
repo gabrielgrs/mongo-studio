@@ -1,1 +1,5 @@
-export const READONLY_KEY = '__MONGO_STUDIO__'
+export const APP_NAME = 'Mongo Studio'
+
+export const APP_DESCRIPTION = 'The future of MongoDB data visualization'
+
+export const APP_DOMAIN = 'https://mongo-studio.com'
