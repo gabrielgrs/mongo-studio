@@ -117,6 +117,12 @@ export function StudioClient({
     })
   }
 
+  const onAddDatabase = (database: string, collection: string) => {
+    setDatabases((p) => [...p, database])
+    onSelectDatabase(sessionIdentifier, database)
+    onSelectCollection(sessionIdentifier, database, collection, page)
+  }
+
   const onRemoveDatabase = async (id: string, databaseName: string) => {
     const [data, err] = await removeDatabaseAction.execute({ databaseName, identifier: id })
     if (err) return toast.error(err.message)
@@ -164,6 +170,7 @@ export function StudioClient({
         onRemoveCollection={(database, collection) => onRemoveCollection(sessionIdentifier, database, collection)}
         isRemovingDatabase={removeDatabaseAction.isPending}
         isRemovingCollection={removeCollectionAction.isPending}
+        onAddDatabase={(database, collection) => onAddDatabase(database, collection)}
       />
 
       <div className='bg-card min-h-screen rounded-tl-2xl p-2 mt-2'>

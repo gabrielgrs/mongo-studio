@@ -21,6 +21,7 @@ type Props = {
   onRemoveDatabase: (databaseName: string) => Promise<unknown>
   onGetData: (databaseName: string, collectionName: string) => Promise<unknown>
   onRemoveCollection: (databaseName: string, collectionName: string) => Promise<unknown>
+  onAddDatabase: (databaseName: string, collectionName: string) => void
   isRemovingCollection: boolean
 }
 export function Sidebar({
@@ -35,6 +36,7 @@ export function Sidebar({
   onGetData,
   activeTab,
   onRemoveCollection,
+  onAddDatabase,
   isRemovingCollection,
 }: Props) {
   return (
@@ -55,7 +57,7 @@ export function Sidebar({
       <div className='p-2'>
         <div className='flex items-center justify-between'>
           <Label>Databases</Label>
-          <DatabaseFormModal sessionIdentifier={sessionIdentifier} onAddDatabase={() => {}} />
+          <DatabaseFormModal sessionIdentifier={sessionIdentifier} onAddDatabase={onAddDatabase} />
         </div>
         {databases.map((databaseName) => (
           <div key={databaseName}>

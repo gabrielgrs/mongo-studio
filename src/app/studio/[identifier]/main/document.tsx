@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
 import { WithId } from 'mongodb'
 import { useState } from 'react'
-import 'react18-json-view/src/style.css'
 import { JsonViewer } from './json-viwer'
 
 type Props = {

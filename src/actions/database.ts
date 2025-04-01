@@ -30,7 +30,7 @@ export const createDatabase = createServerAction()
 
     client.close()
 
-    return { databaseName }
+    return { databaseName, collectionName }
   })
 
 export const removeDatabase = createServerAction()

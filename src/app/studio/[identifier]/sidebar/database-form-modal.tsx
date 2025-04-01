@@ -17,7 +17,7 @@ const defaultValues = {
 }
 
 type Props = {
-  onAddDatabase: (database: string) => void
+  onAddDatabase: (database: string, collection: string) => void
   sessionIdentifier: string
 }
 
@@ -38,7 +38,7 @@ export function DatabaseFormModal({ onAddDatabase, sessionIdentifier }: Props) {
     })
     if (err) return toast.error(err.message)
 
-    onAddDatabase(data.databaseName)
+    onAddDatabase(data.databaseName, data.collectionName)
     setIsOpen(false)
     form.reset()
   }
