@@ -2,6 +2,8 @@ import './globals.css'
 
 import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/utils/cn'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import { Geist as Font } from 'next/font/google'
 import type { ReactNode } from 'react'
@@ -24,6 +26,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
           <Toaster />
         </ClientRootLayout>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
