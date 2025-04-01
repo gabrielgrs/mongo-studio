@@ -78,11 +78,12 @@ export default function JsonEditor({
 
       <div className='flex justify-end gap-2 items-center'>
         <Button variant='ghost' size='sm' onClick={() => onFormatJSON(form.getValues('json'))}>
-          Format JSON
+          Format <span className='hidden md:flex'>JSON</span>
         </Button>
 
         {onCancel && (
           <Button
+            variant='outline'
             size='sm'
             onClick={() => {
               if (onCancel) onCancel()

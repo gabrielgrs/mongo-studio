@@ -10,6 +10,7 @@ import {
 } from '@/actions'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utils/cn'
 import { LogOut, SidebarIcon } from 'lucide-react'
 import { WithId } from 'mongodb'
 import { useState } from 'react'
@@ -24,7 +25,7 @@ export function StudioClient({
   databases: initialDatabases,
   sessionIdentifier,
 }: { databases: string[]; sessionIdentifier: string }) {
-  const [showSidebar, setShowSidebar] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(true)
   const [databases, setDatabases] = useState(initialDatabases)
   const [activeTab, setActiveTab] = useState('')
   const [openDatabases, setOpenDatabases] = useState<Record<string, string[]>>({})
@@ -73,7 +74,6 @@ export function StudioClient({
     })
     setTabsLoading((p) => p.filter((t) => t !== tab))
     if (err) return toast.error(err.message)
-    setShowSidebar(false)
     setOpenCollectionsWithIdentifiers((p) => ({
       ...p,
       [tab]: { totalItems: res.totalItems, data: res.data },
@@ -150,7 +150,7 @@ export function StudioClient({
   }
 
   return (
-    <div className='grid grid-cols-[max-content_auto] gap-2 overflow-x-hidden'>
+    <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto] bg-background')}>
       <Sidebar
         databases={databases}
         showSidebar={showSidebar}
@@ -165,7 +165,7 @@ export function StudioClient({
         isRemovingCollection={removeCollectionAction.isPending}
       />
 
-      <div className='bg-card min-h-screen rounded-tl-2xl p-2'>
+      <div className='bg-card min-h-screen rounded-tl-2xl p-2 mt-2'>
         <div className='flex items-center gap-2 absolute right-0 top-0 bg-background rounded-bl-2xl p-2'>
           <ThemeToggle />
 
@@ -180,7 +180,12 @@ export function StudioClient({
           </Button>
         </div>
 
-        <Button size='icon' variant='ghost' onClick={() => setShowSidebar((p) => !p)} className='relative sm:hidden'>
+        <Button
+          size='icon'
+          variant='ghost'
+          onClick={() => setShowSidebar((p) => !p)}
+          className='p-0 h-6 w-6 text-muted-foreground'
+        >
           <SidebarIcon size={18} />
         </Button>
 

@@ -36,15 +36,15 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen w-[220px] duration-500',
-        showSidebar ? '' : 'w-0 sm:w-[220px] opacity-0 sm:opacity-100',
+        'sticky top-0 h-screen duration-500 overflow-x-hidden',
+        showSidebar ? 'max-w-[220px] min-w-[220px]' : 'max-w-0 min-w-0',
       )}
     >
       <div className='flex h-18 items-center justify-center gap-2 p-2'>
         <Image src='/logo.svg' width={24} height={24} alt='Mongo Studio logo' />
 
         <h2 className='text-lg font-semibold flex items-center gap-2'>
-          <span className='hidden sm:flex'>Mongo Studio</span>
+          <span className='hidden sm:flex whitespace-nowrap'>Mongo Studio</span>
         </h2>
       </div>
 

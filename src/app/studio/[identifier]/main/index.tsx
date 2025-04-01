@@ -4,10 +4,10 @@ import JsonEditor from '@/components/json-editor'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/utils/cn'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Loader2, X } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Loader2, X } from 'lucide-react'
 import { WithId } from 'mongodb'
-import { useState } from 'react'
+import { Document } from './document'
 
 type Props = {
   tabs: string[]
@@ -38,12 +38,10 @@ export function Main({
   onLoadMore,
   isLoadingMoreData,
 }: Props) {
-  const [documentsToEdit, setDocumentsToEdit] = useState<string>('')
-  const [expandedDocuments, setExpandedDocuments] = useState<string[]>([])
   const [selectedDatabase, selectedCollection] = activeTab.split('.')
 
   return (
-    <div className='mt-14 space-y-8 px-4'>
+    <div className='mt-1 space-y-8 px-1 md:px-4'>
       {tabs.length > 0 && (
         <div className='flex flex-wrap overflow-x-auto border-b sticky top-0 z-10 backdrop-blur-lg'>
           {tabs.map((tabIdentifier) => (
@@ -75,7 +73,7 @@ export function Main({
         </div>
       )}
 
-      <main>
+      <main className='space-y-2'>
         {tabs.length > 0 && selectedCollection && (
           <>
             <h2>Query & Insert</h2>
@@ -109,7 +107,7 @@ export function Main({
         )}
 
         {documentsToShow && (
-          <span className='flex items-center gap-1'>
+          <span className='flex flex-col md:flex-row  items-start md:items-center gap-1'>
             {selectedDatabase}.{selectedCollection}
             <span className='text-sm font-normal text-muted-foreground'>
               ({documentsToShow.length} of {totalDocuments} document{totalDocuments < 2 ? '' : 's'})
@@ -120,78 +118,7 @@ export function Main({
         {documentsToShow ? (
           <div className='space-y-2'>
             {documentsToShow.map((doc) => (
-              <div key={doc._id.toString()} className='border rounded-md'>
-                <button
-                  onClick={() =>
-                    setExpandedDocuments((p) =>
-                      p.includes(doc._id.toString())
-                        ? p.filter((id) => id !== doc._id.toString())
-                        : [...p, doc._id.toString()],
-                    )
-                  }
-                  className={`w-full flex items-center justify-between p-3 text-sm hover:bg-foreground/10 ${
-                    expandedDocuments.includes(doc._id.toString()) ? 'bg-foreground/10' : ''
-                  }`}
-                >
-                  <div className='font-mono text-xs truncate flex-1 text-left'>
-                    {JSON.stringify(doc).substring(0, 60)}...
-                  </div>
-                  <ChevronRight
-                    size={20}
-                    className={cn('duration-500', expandedDocuments.includes(doc._id.toString()) && 'rotate-90')}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {expandedDocuments.includes(doc._id.toString()) && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      className='border-t'
-                    >
-                      <div className='p-3 bg-muted/30'>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.1, duration: 0.2 }}
-                          className='relative'
-                        >
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => setDocumentsToEdit(doc._id.toString())}
-                            className='absolute right-1 top-1'
-                          >
-                            Edit
-                          </Button>
-                          {documentsToEdit === doc._id.toString() ? (
-                            <JsonEditor
-                              initialValue={doc}
-                              onSubmit={(values) =>
-                                onUpdateDocument(
-                                  selectedDatabase,
-                                  selectedCollection,
-                                  JSON.stringify(values),
-                                  doc._id.toString(),
-                                )
-                              }
-                              onCancel={() => setDocumentsToEdit('')}
-                              rows={Object.keys(doc).length + 2}
-                              // onChange={setSelectedDocumentToEdit}
-                            />
-                          ) : (
-                            <pre className='text-xs font-mono whitespace-pre-wrap bg-muted p-3 rounded-md overflow-auto'>
-                              {JSON.stringify(doc, null, 2)}
-                            </pre>
-                          )}
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <Document key={doc._id.toString()} data={doc} activeTab={activeTab} onUpdateDocument={onUpdateDocument} />
             ))}
             {(!documentsToShow || documentsToShow.length === 0) && (
               <div className='text-center text-muted-foreground p-4'>No documents found</div>

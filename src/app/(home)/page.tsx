@@ -11,7 +11,7 @@ export default function Page() {
         <p className='text-center text-sm text-muted-foreground'>Enter your connection string to get started</p>
         <ConnectionForm />
       </main>
-      <footer className='text-center text-sm text-muted-foreground py-4'>
+      <footer className='text-center text-sm text-muted-foreground h-20'>
         Made by{' '}
         <Link
           prefetch={false}
