@@ -6,7 +6,7 @@ const meta = {
   description: APP_DESCRIPTION,
 } as const
 
-export const thumbImage = `${APP_DOMAIN}/thumb.png`
+const thumbImage = `${APP_DOMAIN}/thumb.png`
 
 export function generateMetadata(): Metadata {
   return {
