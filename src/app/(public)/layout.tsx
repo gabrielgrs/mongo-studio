@@ -8,14 +8,14 @@ export default function Page({ children }: { children: ReactNode }) {
       <Nav />
       {children}
       <footer className='text-center text-sm text-muted-foreground h-20'>
-        Made by{' '}
+        Support me on{' '}
         <Link
           prefetch={false}
-          href='https://github.com/gabrielgrs'
+          href='https://buymeacoffee.com/gabrielgrs'
           target='_blank'
           className='text-primary underline underline-offset-4'
         >
-          gabrielgrs
+          buymeacoffe
         </Link>
       </footer>
     </div>

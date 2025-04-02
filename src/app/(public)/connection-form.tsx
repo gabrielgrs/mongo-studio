@@ -15,7 +15,7 @@ export function ConnectionForm() {
 
   return (
     <form
-      className='space-y-4'
+      className='space-y-4 mx-auto max-w-lg'
       onSubmit={connectionForm.handleSubmit(async (values) => {
         const [identifier, err] = await generateSessionAction.execute(values.uri)
         if (err) return toast.error(err.message)
