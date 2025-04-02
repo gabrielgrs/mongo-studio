@@ -6,7 +6,7 @@ const meta = {
   description: APP_DESCRIPTION,
 } as const
 
-const thumbImage = `${APP_DOMAIN}/thumb.png`
+const thumb = `${APP_DOMAIN}/thumb.png`
 
 export function generateMetadata(): Metadata {
   return {
@@ -18,12 +18,12 @@ export function generateMetadata(): Metadata {
     twitter: {
       ...meta,
       card: 'summary_large_image',
-      images: [thumbImage],
+      images: [thumb],
     },
     metadataBase: new URL(APP_DOMAIN),
     openGraph: {
       ...meta,
-      images: [thumbImage],
+      images: [thumb],
     },
     icons: [
       {
