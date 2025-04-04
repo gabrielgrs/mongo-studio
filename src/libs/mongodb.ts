@@ -1,17 +1,21 @@
-// This file handles MongoDB connection logic using the environment variables
-
 import { MongoClient } from 'mongodb'
 
-let client: MongoClient | null = null
+let clients = new Map<string, MongoClient>()
+
+function getUri(uri: string, database?: string) {
+  const connectionString = uri.split('/').find((x) => x.includes(':') && x.includes('@'))
+  const startUri = `mongodb+srv://${connectionString}`
+  return database ? `${startUri}/${database}` : startUri
+}
 
 export async function connectToDatabase(rawUri: string, database?: string) {
-  // if (client) return client
+  const uri = getUri(rawUri, database)
+  const activeClient = clients.get(uri)
+  if (activeClient) return activeClient
 
-  const connectionString = rawUri.split('/').find((x) => x.includes(':') && x.includes('@'))
-  const uri = `mongodb+srv://${connectionString}`
-  client = new MongoClient(database ? `${uri}/${database}` : uri)
-
+  const client = new MongoClient(uri)
   await client.connect()
+  clients.set(uri, client)
 
   return client
 }

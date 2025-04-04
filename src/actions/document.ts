@@ -29,8 +29,6 @@ export const getDocuments = createServerAction()
       .limit(page * ITEMS_PER_PAGE)
       .toArray()
 
-    client.close()
-
     const response = { data: collectionData, totalItems, identifier: `${database}.${collection}` }
     return JSON.parse(JSON.stringify(response)) as typeof response
   })
@@ -48,8 +46,6 @@ export const createDocument = createServerAction()
     const client = await getConnection(identifier, database)
     const collectionRef = client.db().collection(collection)
     const result = await collectionRef.insertOne(JSON.parse(data))
-
-    client.close()
 
     return result.insertedId.toString()
   })
@@ -72,8 +68,6 @@ export const updateDocument = createServerAction()
     delete parsedData._id
     const result = await collectionRef.findOneAndUpdate({ _id: new ObjectId(documentId) }, { $set: parsedData })
 
-    client.close()
-
     return parseData(result)
   })
 
@@ -90,8 +84,6 @@ export const removeDocument = createServerAction()
     const client = await getConnection(identifier, database)
     const collectionRef = client.db().collection(collection)
     const result = await collectionRef.findOneAndDelete({ _id: new ObjectId(documentId) })
-
-    client.close()
 
     return parseData(result)
   })

@@ -11,8 +11,6 @@ export const getDatabases = createServerAction()
 
     const { databases } = await client.db().admin().listDatabases()
 
-    client.close()
-
     return databases.map((item) => item.name)
   })
 
@@ -27,8 +25,6 @@ export const createDatabase = createServerAction()
   .handler(async ({ input: { identifier, databaseName, collectionName } }) => {
     const client = await getConnection(identifier)
     await client.db(databaseName).createCollection(collectionName)
-
-    client.close()
 
     return { databaseName, collectionName }
   })
@@ -45,8 +41,6 @@ export const removeDatabase = createServerAction()
 
     const client = await getConnection(identifier)
     await client.db(databaseName).dropDatabase()
-
-    client.close()
 
     return { databaseName }
   })

@@ -10,8 +10,6 @@ export const getCollections = createServerAction()
     const client = await getConnection(identifier, database)
     const collections = await client.db().listCollections().toArray()
 
-    client.close()
-
     return collections.map((item) => item.name)
   })
 
@@ -38,8 +36,6 @@ export const getCollectionData = createServerAction()
       .limit(page * ITEMS_PER_PAGE)
       .toArray()
 
-    client.close()
-
     const response = { data: collectionData, totalItems, identifier: `${database}.${collection}` }
     return JSON.parse(JSON.stringify(response)) as typeof response
   })
@@ -56,8 +52,6 @@ export const createCollection = createServerAction()
     const client = await getConnection(identifier, database)
     await client.db().createCollection(name)
 
-    client.close()
-
     return { name }
   })
 
@@ -66,8 +60,6 @@ export const removeCollection = createServerAction()
   .handler(async ({ input: { identifier, database, collectionName } }) => {
     const client = await getConnection(identifier, database)
     await client.db().collection(collectionName).drop()
-
-    client.close()
 
     return {
       database,
