@@ -14,7 +14,7 @@ type Props = {
   activeTab: string
   onSelectTab: (tabName: string) => void
   onCloseTab: (tabName: string) => void
-  tabsLoading: string[]
+  loadingTab: string
   onCreateDocument: (databaseName: string, collectionName: string, data: string) => Promise<unknown>
   documentsToShow: WithId<string>[]
   totalDocuments: number
@@ -28,7 +28,7 @@ export function Main({
   tabs,
   activeTab,
   onSelectTab,
-  tabsLoading,
+  loadingTab,
   onCloseTab,
   onCreateDocument,
   documentsToShow,
@@ -58,7 +58,7 @@ export function Main({
               )}
               <span className='text-sm font-medium truncate max-w-[120px] sm:max-w-none'>{tabIdentifier}</span>
 
-              {tabsLoading.includes(tabIdentifier) ? (
+              {loadingTab === tabIdentifier ? (
                 <Loader2 size={14} className='animate-spin text-muted-foreground' />
               ) : (
                 <X

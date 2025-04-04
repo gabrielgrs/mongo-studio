@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { LogOut, SidebarIcon } from 'lucide-react'
 import { WithId } from 'mongodb'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
 import { Main } from './main'
@@ -25,12 +25,14 @@ export function StudioClient({
   databases: initialDatabases,
   sessionIdentifier,
 }: { databases: string[]; sessionIdentifier: string }) {
+  const ref = useRef<HTMLElement>(null)
+
   const [showSidebar, setShowSidebar] = useState(true)
   const [databases, setDatabases] = useState(initialDatabases)
   const [activeTab, setActiveTab] = useState('')
   const [openDatabases, setOpenDatabases] = useState<Record<string, string[]>>({})
   const [openCollectionsWithIdentifiers, setOpenCollectionsWithIdentifiers] = useState<CollectionWithIdentifier>({})
-  const [tabsLoading, setTabsLoading] = useState<string[]>([])
+  const [loadingTab, setLoadingTab] = useState('')
   const [page, setPage] = useState(1)
 
   const { data: collections = [], ...getCollectionsAction } = useServerAction(getCollections)
@@ -41,18 +43,29 @@ export function StudioClient({
   const getCollectionDataAction = useServerAction(getCollectionData)
 
   const tabs = Object.keys(openCollectionsWithIdentifiers)
-  // const [selectedDatabase, selectedCollection] = activeTab.split('.')
   const documentsToShow = openCollectionsWithIdentifiers[activeTab]?.data
   const totalDocuments = openCollectionsWithIdentifiers[activeTab]?.totalItems ?? -1
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        if (window.innerWidth < 768) setShowSidebar(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const onSelectDatabase = async (id: string, dbName: string) => {
     const tab = `${dbName}.`
-    setTabsLoading((p) => [...p, tab])
+    setLoadingTab(tab)
     const [res, err] = await getCollectionsAction.execute({
       database: dbName,
       identifier: id,
     })
-    setTabsLoading((p) => p.filter((t) => t !== tab))
+    setLoadingTab('')
     if (err) return toast.error(err.message)
     return setOpenDatabases((prev) => ({ ...prev, [dbName]: res }))
   }
@@ -64,7 +77,7 @@ export function StudioClient({
     query?: string,
   ) => {
     const tab = `${databaseName}.${collectionName}`
-    setTabsLoading((p) => [...p, tab])
+    setLoadingTab(tab)
     const [res, err] = await getCollectionDataAction.execute({
       identifier: id,
       database: databaseName,
@@ -72,7 +85,7 @@ export function StudioClient({
       query,
       page,
     })
-    setTabsLoading((p) => p.filter((t) => t !== tab))
+    setLoadingTab('')
     if (err) return toast.error(err.message)
     setOpenCollectionsWithIdentifiers((p) => ({
       ...p,
@@ -156,14 +169,14 @@ export function StudioClient({
   }
 
   return (
-    <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto] bg-background')}>
+    <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto]')}>
       <Sidebar
         sessionIdentifier={sessionIdentifier}
         databases={databases}
         showSidebar={showSidebar}
         onSelectDatabase={(database) => onSelectDatabase(sessionIdentifier, database)}
         openDatabases={openDatabases}
-        tabsLoading={tabsLoading}
+        loadingTab={loadingTab}
         onRemoveDatabase={(database) => onRemoveDatabase(sessionIdentifier, database)}
         onGetData={(database, collection) => onSelectCollection(sessionIdentifier, database, collection, page)}
         activeTab={activeTab}
@@ -173,7 +186,7 @@ export function StudioClient({
         onAddDatabase={(database, collection) => onAddDatabase(database, collection)}
       />
 
-      <div className='bg-card min-h-screen rounded-tl-2xl p-2 mt-2'>
+      <div className='bg-card/50 back min-h-screen rounded-tl-2xl p-2 mt-4 border shadow'>
         <div className='flex items-center gap-2 absolute right-0 top-0 bg-background rounded-bl-2xl p-2'>
           <ThemeToggle />
 
@@ -201,7 +214,7 @@ export function StudioClient({
           activeTab={activeTab}
           tabs={tabs}
           onSelectTab={(tab) => setActiveTab(tab)}
-          tabsLoading={tabsLoading}
+          loadingTab={loadingTab}
           onCloseTab={onCloseTab}
           onCreateDocument={(database, collection, data) =>
             onCreateDocument(sessionIdentifier, database, collection, data)

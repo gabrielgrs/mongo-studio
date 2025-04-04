@@ -14,7 +14,7 @@ type Props = {
   databases: string[]
   showSidebar: boolean
   openDatabases: Record<string, string[]>
-  tabsLoading: string[]
+  loadingTab: string
   isRemovingDatabase: boolean
   activeTab: string
   onSelectDatabase: (databaseName: string) => void
@@ -30,7 +30,7 @@ export function Sidebar({
   showSidebar,
   onSelectDatabase,
   openDatabases,
-  tabsLoading,
+  loadingTab,
   onRemoveDatabase,
   isRemovingDatabase,
   onGetData,
@@ -73,7 +73,7 @@ export function Sidebar({
 
                 <span className='whitespace-nowrap'>{databaseName}</span>
                 <div className='absolute right-2 top-[50%] translate-y-[-50%] z-50'>
-                  {tabsLoading.includes(`${databaseName}.`) && (
+                  {loadingTab.includes(`${databaseName}.`) && (
                     <Loader2 size={14} className='animate-spin text-muted-foreground' />
                   )}
                 </div>
@@ -134,7 +134,7 @@ export function Sidebar({
                               />
                             )}
                             {collectionName}
-                            {tabsLoading.includes(`${databaseName}.${collectionName}`) && (
+                            {loadingTab === `${databaseName}.${collectionName}` && (
                               <Loader2 size={14} className='animate-spin text-muted-foreground' />
                             )}
                           </motion.button>

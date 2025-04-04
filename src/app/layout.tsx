@@ -16,9 +16,7 @@ export const metadata = generateMetadata()
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang='en'>
-      <body
-        className={cn(font.className, 'min-h-screen bg-gradient-to-br from-background/0 via-primary/5 to-background/0')}
-      >
+      <body className={cn(font.className, 'min-h-screen bg-gradient-to-b from-background via-background to-accent/10')}>
         <ClientRootLayout>
           {children}
           <Toaster />
