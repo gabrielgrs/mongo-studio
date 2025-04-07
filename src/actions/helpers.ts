@@ -5,9 +5,10 @@ import { db } from '@/libs/mongoose'
 
 export async function getConnection(identifier: string, database?: string) {
   const session = await db.session.findOne({ _id: identifier })
-  if (!session) throw new Error('Session not found')
+  if (!session) throw new Error('SESSION_NOT_FOUND')
 
-  return connectToDatabase(session.connectionString, database)
+  // TODO: fix
+  return connectToDatabase('', database)
 }
 
 export async function testConnection(uri: string) {

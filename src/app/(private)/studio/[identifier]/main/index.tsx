@@ -73,7 +73,7 @@ export function Main({
         </div>
       )}
 
-      <main className='space-y-2'>
+      <div className='space-y-2'>
         {tabs.length > 0 && selectedCollection && (
           <>
             <h2>Query & Insert</h2>
@@ -140,7 +140,7 @@ export function Main({
             Select a collection from the sidebar to view documents
           </div>
         )}
-      </main>
+      </div>
     </div>
   )
 }

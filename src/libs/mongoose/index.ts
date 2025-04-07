@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 import { session } from './schemas/session'
+import { user } from './schemas/user'
 
 let connection: typeof mongoose | null = null
 
@@ -13,5 +14,6 @@ export const connectDatabase = async (uri = process.env.MONGODB_URI): Promise<ty
 connectDatabase()
 
 export const db = {
+  user,
   session,
 }

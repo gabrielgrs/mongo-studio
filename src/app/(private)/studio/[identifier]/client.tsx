@@ -8,16 +8,16 @@ import {
   removeDatabase,
   updateDocument,
 } from '@/actions'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { LogOut, SidebarIcon } from 'lucide-react'
+import { APP_NAME } from '@/utils/constants'
+import { SidebarIcon } from 'lucide-react'
 import { WithId } from 'mongodb'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
+import { Databases } from './databases'
 import { Main } from './main'
-import { Sidebar } from './sidebar'
 
 type CollectionWithIdentifier = Record<string, { totalItems: number; data: WithId<any>[] }>
 
@@ -118,12 +118,12 @@ export function StudioClient({
 
     setOpenCollectionsWithIdentifiers((p) => {
       const newOpenCollectionsWithIdentifiers = { ...p }
-      delete newOpenCollectionsWithIdentifiers[`${data.database}.${data.collectionName}`]
+      delete newOpenCollectionsWithIdentifiers[`${database}.${data.collectionName}`]
       return newOpenCollectionsWithIdentifiers
     })
     setOpenDatabases((p) => {
       const newOpenDatabases = { ...p }
-      newOpenDatabases[data.database] = newOpenDatabases[data.database].filter(
+      newOpenDatabases[database] = newOpenDatabases[database].filter(
         (collectionName) => collectionName !== data.collectionName,
       )
       return newOpenDatabases
@@ -169,8 +169,8 @@ export function StudioClient({
   }
 
   return (
-    <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto]')}>
-      <Sidebar
+    <div className={cn('grid overflow-x-hidden duration-500 grid-cols-[max-content_auto]')}>
+      <Databases
         sessionIdentifier={sessionIdentifier}
         databases={databases}
         showSidebar={showSidebar}
@@ -186,53 +186,46 @@ export function StudioClient({
         onAddDatabase={(database, collection) => onAddDatabase(database, collection)}
       />
 
-      <div className='bg-card/50 back min-h-screen rounded-tl-2xl p-2 mt-4 border shadow'>
-        <div className='flex items-center gap-2 absolute right-0 top-0 bg-background rounded-bl-2xl p-2'>
-          <ThemeToggle />
-
+      <div className='bg-card/50 back min-h-screen shadow'>
+        <header className='border-b bg-background h-16 flex items-center gap-1 px-2'>
           <Button
-            variant='outline'
-            size='icon'
-            onClick={() => window.location.reload()}
-            title='Disconnect'
-            className='h-8 w-8'
+            variant='ghost'
+            onClick={() => setShowSidebar((p) => !p)}
+            className={cn(
+              'text-muted-foreground duration-500',
+              showSidebar ? 'translate-x-[160px] md:translate-x-0' : 'translate-x-0',
+            )}
           >
-            <LogOut size={18} />
+            <SidebarIcon size={18} />
           </Button>
-        </div>
+          <p className='text-sm text-muted-foreground'>{APP_NAME}</p>
+        </header>
 
-        <Button
-          size='icon'
-          variant='ghost'
-          onClick={() => setShowSidebar((p) => !p)}
-          className='p-0 h-6 w-6 text-muted-foreground'
-        >
-          <SidebarIcon size={18} />
-        </Button>
-
-        <Main
-          activeTab={activeTab}
-          tabs={tabs}
-          onSelectTab={(tab) => setActiveTab(tab)}
-          loadingTab={loadingTab}
-          onCloseTab={onCloseTab}
-          onCreateDocument={(database, collection, data) =>
-            onCreateDocument(sessionIdentifier, database, collection, data)
-          }
-          documentsToShow={documentsToShow}
-          totalDocuments={totalDocuments}
-          onExecuteQuery={(database, collection, query) =>
-            onSelectCollection(sessionIdentifier, database, collection, page, query)
-          }
-          onUpdateDocument={(database, collection, id, data) =>
-            onUpdateDocument(sessionIdentifier, database, collection, id, data)
-          }
-          onLoadMore={(database, collection) => {
-            setPage((p) => p + 1)
-            onSelectCollection(sessionIdentifier, database, collection, page + 1)
-          }}
-          isLoadingMoreData={getCollectionDataAction.isPending && totalDocuments > 0}
-        />
+        <main className='p-4'>
+          <Main
+            activeTab={activeTab}
+            tabs={tabs}
+            onSelectTab={(tab) => setActiveTab(tab)}
+            loadingTab={loadingTab}
+            onCloseTab={onCloseTab}
+            onCreateDocument={(database, collection, data) =>
+              onCreateDocument(sessionIdentifier, database, collection, data)
+            }
+            documentsToShow={documentsToShow}
+            totalDocuments={totalDocuments}
+            onExecuteQuery={(database, collection, query) =>
+              onSelectCollection(sessionIdentifier, database, collection, page, query)
+            }
+            onUpdateDocument={(database, collection, id, data) =>
+              onUpdateDocument(sessionIdentifier, database, collection, id, data)
+            }
+            onLoadMore={(database, collection) => {
+              setPage((p) => p + 1)
+              onSelectCollection(sessionIdentifier, database, collection, page + 1)
+            }}
+            isLoadingMoreData={getCollectionDataAction.isPending && totalDocuments > 0}
+          />
+        </main>
       </div>
     </div>
   )

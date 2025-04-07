@@ -1,6 +1,5 @@
 'use client'
 
-import { ThemeToggle } from '@/components/theme-toggle'
 import { buttonVariants } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,7 +15,9 @@ export function Nav() {
         <Link href='/contact' className={buttonVariants({ variant: 'ghost' })}>
           Contact
         </Link>
-        <ThemeToggle />
+        <Link href='/auth' className={buttonVariants({})}>
+          Sign in
+        </Link>
       </nav>
     </header>
   )

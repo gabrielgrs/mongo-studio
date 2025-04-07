@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/utils/cn'
 import { ChevronRight, Ellipsis, Loader2, Trash } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import Image from 'next/image'
 import { DatabaseFormModal } from './database-form-modal'
 
 type Props = {
@@ -24,7 +23,7 @@ type Props = {
   onAddDatabase: (databaseName: string, collectionName: string) => void
   isRemovingCollection: boolean
 }
-export function Sidebar({
+export function Databases({
   sessionIdentifier,
   databases,
   showSidebar,
@@ -42,21 +41,13 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen duration-500 overflow-x-hidden',
-        showSidebar ? 'max-w-[220px] min-w-[220px]' : 'max-w-0 min-w-0',
+        'fixed md:sticky left-0 top-0 h-screen duration-500 overflow-x-hidden backdrop-blur-lg ',
+        showSidebar ? 'max-w-[220px] min-w-[220px] border' : 'max-w-0 min-w-0 translate-x-[-100%] md:translate-x-0',
       )}
     >
-      <div className='flex h-18 items-center justify-center gap-2 p-2'>
-        <Image src='/logo.svg' width={24} height={24} alt='Mongo Studio logo' />
-
-        <h2 className='text-lg font-semibold flex items-center gap-2'>
-          <span className='hidden sm:flex whitespace-nowrap'>Mongo Studio</span>
-        </h2>
-      </div>
-
       <div className='p-2'>
         <div className='flex items-center justify-between'>
-          <Label>Databases</Label>
+          <Label>databases</Label>
           <DatabaseFormModal sessionIdentifier={sessionIdentifier} onAddDatabase={onAddDatabase} />
         </div>
         {databases.map((databaseName) => (

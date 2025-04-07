@@ -3,7 +3,8 @@ import { Schema } from 'mongoose'
 import { createMongooseSchema } from '../helpers'
 
 export type Session = WithId<{
-  connectionString: string
+  email: string
+  code: string
   expiresAt: Date
   createdAt: Date
   updatedAt: Date
@@ -15,7 +16,11 @@ export const session = createMongooseSchema<Session>(
   'Session',
   new Schema<Session>(
     {
-      connectionString: {
+      email: {
+        type: String,
+        required: true,
+      },
+      code: {
         type: String,
         required: true,
       },

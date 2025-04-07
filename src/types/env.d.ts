@@ -4,5 +4,6 @@ declare namespace NodeJS {
     VERCEL_ENV: 'production' | 'development' | 'preview'
     MONGODB_URI: string
     RESEND_KEY: string
+    JWT_SECRET: string
   }
 }

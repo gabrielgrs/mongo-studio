@@ -1,5 +1,6 @@
 import { APP_DESCRIPTION } from '@/utils/constants'
-import { ConnectionForm } from './connection-form'
+// import { ConnectionForm } from './connection-form'
+import Image from 'next/image'
 
 export default function Page() {
   return (
@@ -11,7 +12,7 @@ export default function Page() {
       </div>
       <h1 className='text-center px-4'>{APP_DESCRIPTION}</h1>
       <p className='text-center text-sm text-muted-foreground'>Enter your connection string to get started</p>
-      <ConnectionForm />
+      <Image src='/thumb.png' width={768} height={768} alt='Mongo Studio logo' className='mx-auto' />
     </main>
   )
 }
