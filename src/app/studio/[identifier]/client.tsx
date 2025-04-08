@@ -136,21 +136,19 @@ export function StudioClient({
     onSelectCollection(sessionIdentifier, database, collection, page)
   }
 
-  const onRemoveDatabase = async (id: string, databaseName: string) => {
-    const [data, err] = await removeDatabaseAction.execute({ databaseName, identifier: id })
+  const onRemoveDatabase = async (id: string, database: string) => {
+    const [_, err] = await removeDatabaseAction.execute({ database, identifier: id })
     if (err) return toast.error(err.message)
 
-    setDatabases((p) => p.filter((x) => x !== data.databaseName))
+    setDatabases((p) => p.filter((x) => x !== database))
     setOpenDatabases((p) => {
       const newOpenDatabases = { ...p }
-      delete newOpenDatabases[data.databaseName]
+      delete newOpenDatabases[database]
       return newOpenDatabases
     })
     setOpenCollectionsWithIdentifiers((p) => {
       const newOpenCollectionsWithIdentifiers = { ...p }
-      const identifiers = Object.keys(newOpenCollectionsWithIdentifiers).filter((item) =>
-        item.includes(data.databaseName),
-      )
+      const identifiers = Object.keys(newOpenCollectionsWithIdentifiers).filter((item) => item.includes(database))
       identifiers.forEach((item) => delete newOpenCollectionsWithIdentifiers[item])
       return newOpenCollectionsWithIdentifiers
     })

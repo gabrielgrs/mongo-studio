@@ -7,7 +7,7 @@ type Props = {
 }
 export default async function Home({ params }: Props) {
   const { identifier } = await params
-  const [data, error] = await getDatabases({ identifier: identifier })
+  const [data, error] = await getDatabases({ identifier, database: '' })
 
   if (error)
     return (

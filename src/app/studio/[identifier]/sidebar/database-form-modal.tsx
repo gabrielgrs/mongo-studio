@@ -31,14 +31,14 @@ export function DatabaseFormModal({ onAddDatabase, sessionIdentifier }: Props) {
   const createDatabaseAction = useServerAction(createDatabase)
 
   const onSubmit = async (values: typeof defaultValues) => {
-    const [data, err] = await createDatabaseAction.execute({
+    const [_, err] = await createDatabaseAction.execute({
       identifier: sessionIdentifier,
-      databaseName: values.database,
-      collectionName: values.collection,
+      database: values.database,
+      collection: values.collection,
     })
     if (err) return toast.error(err.message)
 
-    onAddDatabase(data.databaseName, data.collectionName)
+    onAddDatabase(values.database, values.collection)
     setIsOpen(false)
     form.reset()
   }
