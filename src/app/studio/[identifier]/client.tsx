@@ -8,16 +8,16 @@ import {
   removeDatabase,
   updateDocument,
 } from '@/actions'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { LogOut, SidebarIcon } from 'lucide-react'
+import { AlignRight } from 'lucide-react'
 import { WithId } from 'mongodb'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
-import { Main } from './main'
-import { Sidebar } from './sidebar'
+import { Content } from './content'
+import { DatabaseList } from './database-list'
+import { Tabs } from './tabs'
 
 type CollectionWithIdentifier = Record<string, { totalItems: number; data: WithId<any>[] }>
 
@@ -167,70 +167,66 @@ export function StudioClient({
   }
 
   return (
-    <div className={cn('grid gap-2 overflow-x-hidden duration-500 grid-cols-[max-content_auto]')}>
-      <Sidebar
-        sessionIdentifier={sessionIdentifier}
-        databases={databases}
-        showSidebar={showSidebar}
-        onSelectDatabase={(database) => onSelectDatabase(sessionIdentifier, database)}
-        openDatabases={openDatabases}
-        loadingTab={loadingTab}
-        onRemoveDatabase={(database) => onRemoveDatabase(sessionIdentifier, database)}
-        onGetData={(database, collection) => onSelectCollection(sessionIdentifier, database, collection, page)}
-        activeTab={activeTab}
-        onRemoveCollection={(database, collection) => onRemoveCollection(sessionIdentifier, database, collection)}
-        isRemovingDatabase={removeDatabaseAction.isPending}
-        isRemovingCollection={removeCollectionAction.isPending}
-        onAddDatabase={(database, collection) => onAddDatabase(database, collection)}
-      />
+    <div className={cn('grid overflow-x-hidden duration-500 grid-cols-[max-content_auto] min-h-screen')}>
+      <aside
+        className={cn(
+          'min-w-3xs border-r fixed md:sticky top-0 left-0 w-full md:w-max backdrop-blur-2xl duration-500 z-20',
+          showSidebar ? 'translate-x-0' : 'translate-x-[-100%] md:translate-x-0',
+        )}
+      >
+        <DatabaseList
+          sessionIdentifier={sessionIdentifier}
+          databases={databases}
+          showSidebar={showSidebar}
+          onSelectDatabase={(database) => onSelectDatabase(sessionIdentifier, database)}
+          openDatabases={openDatabases}
+          loadingTab={loadingTab}
+          onRemoveDatabase={(database) => onRemoveDatabase(sessionIdentifier, database)}
+          onGetData={(database, collection) => onSelectCollection(sessionIdentifier, database, collection, page)}
+          activeTab={activeTab}
+          onRemoveCollection={(database, collection) => onRemoveCollection(sessionIdentifier, database, collection)}
+          isRemovingDatabase={removeDatabaseAction.isPending}
+          isRemovingCollection={removeCollectionAction.isPending}
+          onAddDatabase={(database, collection) => onAddDatabase(database, collection)}
+          onToggleSidebar={() => setShowSidebar((p) => !p)}
+        />
+      </aside>
 
-      <div className='bg-card/50 back min-h-screen rounded-tl-2xl p-2 mt-4 border shadow'>
-        <div className='flex items-center gap-2 absolute right-0 top-0 bg-background rounded-bl-2xl p-2'>
-          <ThemeToggle />
-
-          <Button
-            variant='outline'
-            size='icon'
-            onClick={() => window.location.reload()}
-            title='Disconnect'
-            className='h-8 w-8'
-          >
-            <LogOut size={18} />
+      <div>
+        <div className='p-2'>
+          <Button size='icon' variant='outline' onClick={() => setShowSidebar((p) => !p)} className='flex md:hidden'>
+            <AlignRight />
           </Button>
         </div>
-
-        <Button
-          size='icon'
-          variant='ghost'
-          onClick={() => setShowSidebar((p) => !p)}
-          className='p-0 h-6 w-6 text-muted-foreground'
-        >
-          <SidebarIcon size={18} />
-        </Button>
-
-        <Main
-          activeTab={activeTab}
+        <Tabs
           tabs={tabs}
           onSelectTab={(tab) => setActiveTab(tab)}
           loadingTab={loadingTab}
           onCloseTab={onCloseTab}
-          onCreateDocument={(database, collection, data) =>
-            onCreateDocument(sessionIdentifier, database, collection, data)
-          }
-          documentsToShow={documentsToShow}
-          totalDocuments={totalDocuments}
-          onExecuteQuery={(database, collection, query) =>
-            onSelectCollection(sessionIdentifier, database, collection, page, query)
-          }
-          onUpdateDocument={(database, collection, id, data) =>
-            onUpdateDocument(sessionIdentifier, database, collection, id, data)
-          }
-          onLoadMore={(database, collection) => {
-            setPage((p) => p + 1)
-            onSelectCollection(sessionIdentifier, database, collection, page + 1)
-          }}
-          isLoadingMoreData={getCollectionDataAction.isPending && totalDocuments > 0}
+          activeTab={activeTab}
         />
+        <main className='px-2 py-4'>
+          <Content
+            tabs={tabs}
+            activeTab={activeTab}
+            onCreateDocument={(database, collection, data) =>
+              onCreateDocument(sessionIdentifier, database, collection, data)
+            }
+            documentsToShow={documentsToShow}
+            totalDocuments={totalDocuments}
+            onExecuteQuery={(database, collection, query) =>
+              onSelectCollection(sessionIdentifier, database, collection, page, query)
+            }
+            onUpdateDocument={(database, collection, id, data) =>
+              onUpdateDocument(sessionIdentifier, database, collection, id, data)
+            }
+            onLoadMore={(database, collection) => {
+              setPage((p) => p + 1)
+              onSelectCollection(sessionIdentifier, database, collection, page + 1)
+            }}
+            isLoadingMoreData={getCollectionDataAction.isPending && totalDocuments > 0}
+          />
+        </main>
       </div>
     </div>
   )

@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
@@ -17,11 +16,12 @@ const defaultValues = {
 }
 
 type Props = {
+  children: ReactNode
   onAddDatabase: (database: string, collection: string) => void
   sessionIdentifier: string
 }
 
-export function DatabaseFormModal({ onAddDatabase, sessionIdentifier }: Props) {
+export function DatabaseFormModal({ children, onAddDatabase, sessionIdentifier }: Props) {
   const [isOpen, setIsOpen] = useState(false)
 
   const form = useForm({
@@ -53,11 +53,7 @@ export function DatabaseFormModal({ onAddDatabase, sessionIdentifier }: Props) {
         setIsOpen(state)
       }}
     >
-      <DialogTrigger asChild>
-        <button className='text-muted-foreground'>
-          <Plus size={16} />
-        </button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-2'>
           <DialogTitle>Add database</DialogTitle>
