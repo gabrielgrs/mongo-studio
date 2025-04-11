@@ -24,3 +24,10 @@ export const generateSession = createServerAction()
 
     return session._id.toString()
   })
+
+export const removeSession = createServerAction()
+  .input(z.string())
+  .handler(async ({ input: identifier }) => {
+    await db.session.deleteOne({ _id: identifier })
+    return true
+  })

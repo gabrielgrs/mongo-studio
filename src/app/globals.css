@@ -125,7 +125,7 @@
   }
 
   button:disabled {
-    @apply duration-500 cursor-not-allowed;
+    @apply duration-500 cursor-not-allowed pointer-events-none;
   }
 
   h1 {

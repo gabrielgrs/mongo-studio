@@ -24,7 +24,7 @@ type Props = {
   isLoadingMoreData: boolean
 }
 
-export function Main({
+export function Content({
   tabs,
   activeTab,
   onSelectTab,
@@ -41,7 +41,7 @@ export function Main({
   const [selectedDatabase, selectedCollection] = activeTab.split('.')
 
   return (
-    <div className='mt-1 space-y-8 px-1 md:px-4'>
+    <div className='space-y-8'>
       {tabs.length > 0 && (
         <div className='flex flex-wrap overflow-x-auto border-b sticky top-0 z-10 backdrop-blur-lg'>
           {tabs.map((tabIdentifier) => (
@@ -73,7 +73,7 @@ export function Main({
         </div>
       )}
 
-      <main className='space-y-2'>
+      <div className='space-y-2'>
         {tabs.length > 0 && selectedCollection && (
           <>
             <h2>Query & Insert</h2>
@@ -140,7 +140,7 @@ export function Main({
             Select a collection from the sidebar to view documents
           </div>
         )}
-      </main>
+      </div>
     </div>
   )
 }

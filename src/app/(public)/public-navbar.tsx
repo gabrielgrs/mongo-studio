@@ -1,11 +1,14 @@
 'use client'
 
-import { ThemeToggle } from '@/components/theme-toggle'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Moon, Sun } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export function Nav() {
+export function PublicNavbar() {
+  const { theme, setTheme } = useTheme()
+
   return (
     <header className='flex justify-between items-center h-16'>
       <Link href='/' prefetch={false} className='flex items-center gap-2'>
@@ -16,7 +19,9 @@ export function Nav() {
         <Link href='/contact' className={buttonVariants({ variant: 'ghost' })}>
           Contact
         </Link>
-        <ThemeToggle />
+        <Button variant='outline' size='icon' onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+        </Button>
       </nav>
     </header>
   )

@@ -21,7 +21,7 @@ export const session = createMongooseSchema<Session>(
       },
       expiresAt: {
         type: Date,
-        expires: 30 * ONE_MINUTE,
+        expires: 60 * ONE_MINUTE,
         default: Date.now,
       },
     },
