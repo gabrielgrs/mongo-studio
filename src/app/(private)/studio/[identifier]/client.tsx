@@ -167,10 +167,15 @@ export function StudioClient({
   }
 
   return (
-    <div className={cn('grid overflow-x-hidden duration-500 grid-cols-[max-content_auto] min-h-screen')}>
+    <div
+      className={cn(
+        'grid  duration-500 grid-cols-[max-content_auto] min-h-screen',
+        showSidebar ? 'grid-cols-[max-content_auto]' : 'grid-cols-1 md:grid-cols-[max-content_auto]',
+      )}
+    >
       <aside
         className={cn(
-          'min-w-3xs border-r fixed md:sticky top-0 left-0 w-full md:w-max backdrop-blur-2xl duration-500 z-20',
+          'min-w-3xs border-r fixed md:sticky top-0 left-0 w-full md:w-max backdrop-blur-2xl duration-500 z-20 h-screen',
           showSidebar ? 'translate-x-0' : 'translate-x-[-100%] md:translate-x-0',
         )}
       >
@@ -192,19 +197,26 @@ export function StudioClient({
         />
       </aside>
 
-      <div>
-        <div className='p-2'>
-          <Button size='icon' variant='outline' onClick={() => setShowSidebar((p) => !p)} className='flex md:hidden'>
-            <AlignRight />
-          </Button>
-        </div>
-        <Tabs
-          tabs={tabs}
-          onSelectTab={(tab) => setActiveTab(tab)}
-          loadingTab={loadingTab}
-          onCloseTab={onCloseTab}
-          activeTab={activeTab}
-        />
+      <div className='sticky top-0'>
+        <header className='flex justify-start items-start sticky top-0 backdrop-blur-lg z-10'>
+          <div className='py-2'>
+            <Button
+              size='icon'
+              variant='ghost'
+              onClick={() => setShowSidebar((p) => !p)}
+              className='flex md:hidden text-muted-foreground'
+            >
+              <AlignRight />
+            </Button>
+          </div>
+          <Tabs
+            tabs={tabs}
+            onSelectTab={(tab) => setActiveTab(tab)}
+            loadingTab={loadingTab}
+            onCloseTab={onCloseTab}
+            activeTab={activeTab}
+          />
+        </header>
         <main className='px-2 py-4'>
           <Content
             tabs={tabs}

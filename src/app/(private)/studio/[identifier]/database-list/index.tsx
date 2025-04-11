@@ -55,8 +55,8 @@ export function DatabaseList({
           <Image src='/logo.svg' width={24} height={24} alt='Mongo Studio logo' />
           <p>{APP_NAME}</p>
         </div>
-        <Button variant='outline' size='icon' onClick={onToggleSidebar} className='flex md:hidden'>
-          <X />
+        <Button variant='ghost' size='icon' onClick={onToggleSidebar} className='flex md:hidden text-muted-foreground'>
+          <X size={20} />
         </Button>
       </div>
 
@@ -74,6 +74,7 @@ export function DatabaseList({
             <div key={databaseName}>
               <div className='flex items-center gap-1'>
                 <button
+                  disabled={Boolean(loadingTab)}
                   onClick={() => onSelectDatabase(databaseName)}
                   className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm relative'
                 >
@@ -88,7 +89,10 @@ export function DatabaseList({
                 {openDatabases[databaseName] && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className='text-muted-foreground'>
+                      <button
+                        className='text-muted-foreground disabled:cursor-not-allowed'
+                        disabled={Boolean(loadingTab)}
+                      >
                         <Ellipsis size={16} />
                       </button>
                     </DropdownMenuTrigger>
@@ -124,6 +128,7 @@ export function DatabaseList({
                         return (
                           <div key={collectionName} className='flex items-center gap-1'>
                             <motion.button
+                              disabled={Boolean(loadingTab)}
                               initial={{ opacity: 0, x: -5 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2 }}
