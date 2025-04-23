@@ -1,5 +1,6 @@
 'use server'
 
+import { parseData } from '@/utils/action'
 import { z } from 'zod'
 import { connectionProcedure } from './procedures'
 
@@ -22,7 +23,11 @@ export const getCollectionData = connectionProcedure
     }),
   )
   .handler(async ({ ctx, input: { database, collection, page, query } }) => {
-    const totalItems = await ctx.client.db().collection(collection).countDocuments()
+    const databaseRef = ctx.client.db()
+
+    // const dbStats = await databaseRef.stats()
+    const collectionStats = await databaseRef.command({ collStats: collection })
+
     const collectionData = await ctx.client
       .db()
       .collection(collection)
@@ -30,8 +35,13 @@ export const getCollectionData = connectionProcedure
       .limit(page * ITEMS_PER_PAGE)
       .toArray()
 
-    const response = { data: collectionData, totalItems, identifier: `${database}.${collection}` }
-    return JSON.parse(JSON.stringify(response)) as typeof response
+    return parseData({
+      documents: collectionData,
+      totalItems: Number(collectionStats.count),
+      storageSize: Number(collectionStats.storageSize),
+      totalIndexes: Number(collectionStats.nindexes),
+      identifier: `${database}.${collection}`,
+    })
   })
 
 export const createCollection = connectionProcedure

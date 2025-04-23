@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className={cn(font.className, 'min-h-screen bg-gradient-to-b from-background via-background to-accent/10')}>
         <RootClientLayout>
           {children}
-          <Toaster />
+          <Toaster position='top-center' richColors />
         </RootClientLayout>
         <SpeedInsights />
         <Analytics />

@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
-import { WithId } from 'mongodb'
+import { Document as MongoDocument, WithId } from 'mongodb'
 import { useState } from 'react'
 import { JsonViewer } from './json-viwer'
 
 type Props = {
   activeTab: string
   onUpdateDocument: (databaseName: string, collectionName: string, id: string, data: string) => Promise<unknown>
-  data: WithId<string>
+  data: WithId<MongoDocument>
 }
 
 export function Document({ activeTab, onUpdateDocument, data }: Props) {
@@ -34,7 +34,9 @@ export function Document({ activeTab, onUpdateDocument, data }: Props) {
           isExpanded ? 'bg-foreground/10' : '',
         )}
       >
-        <div>{JSON.stringify({ id: data._id.toString() })}</div>
+        <p className='text-foreground/80 hover:text-foreground duration-500'>
+          {JSON.stringify({ _id: data._id.toString() })}
+        </p>
         <ChevronRight size={20} className={cn('duration-500', isExpanded && 'rotate-90')} />
       </button>
 

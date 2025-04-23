@@ -6,6 +6,7 @@ import { Link } from '@/components/link'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/utils/cn'
 import { APP_NAME } from '@/utils/constants'
 import { Ellipsis, Loader2, LogOut, Moon, Sun, Trash, X } from 'lucide-react'
@@ -46,6 +47,7 @@ export function DatabaseList({
   isRemovingCollection,
   onToggleSidebar,
 }: Props) {
+  const [selectedDatabase, selectedCollection] = activeTab.split('.')
   const { theme, setTheme } = useTheme()
 
   return (
@@ -68,7 +70,7 @@ export function DatabaseList({
             </Button>
           </DatabaseFormModal>
         </div>
-        <>
+        <ScrollArea className='h-[calc(100vh-240px)]'>
           <Label className='text-muted-foreground'>Databases</Label>
           {databases.map((databaseName) => (
             <div key={databaseName}>
@@ -78,7 +80,11 @@ export function DatabaseList({
                   onClick={() => onSelectDatabase(databaseName)}
                   className='w-full flex items-center gap-1 p-2 hover:bg-card rounded-md text-left text-sm relative'
                 >
-                  <span className='whitespace-nowrap'>{databaseName}</span>
+                  <span
+                    className={cn('whitespace-nowrap duration-500', selectedDatabase === databaseName && 'text-accent')}
+                  >
+                    {databaseName}
+                  </span>
                   <div className='absolute right-2 top-[50%] translate-y-[-50%] z-50'>
                     {loadingTab.includes(`${databaseName}.`) && (
                       <Loader2 size={14} className='animate-spin text-muted-foreground' />
@@ -144,7 +150,17 @@ export function DatabaseList({
                                   className='absolute left-0 top-0 w-full h-full bg-foreground/5 rounded-md'
                                 />
                               )}
-                              {collectionName}
+                              <span
+                                className={cn(
+                                  'whitespace-nowrap duration-500',
+                                  selectedDatabase === databaseName &&
+                                    selectedCollection === collectionName &&
+                                    'text-accent',
+                                )}
+                              >
+                                {collectionName}
+                              </span>
+
                               {loadingTab === `${databaseName}.${collectionName}` && (
                                 <Loader2 size={14} className='animate-spin text-muted-foreground' />
                               )}
@@ -178,7 +194,7 @@ export function DatabaseList({
               </AnimatePresence>
             </div>
           ))}
-        </>
+        </ScrollArea>
         <div className='space-y-2 mt-4'>
           <Button
             variant='ghost'

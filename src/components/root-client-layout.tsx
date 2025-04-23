@@ -7,7 +7,6 @@ const NextThemesProvider = dynamic(() => import('next-themes').then((e) => e.The
 })
 import { usePathname } from 'next/navigation'
 import { type ReactNode, useEffect } from 'react'
-import { Toaster } from 'sonner'
 
 // const client = new QueryClient()
 
@@ -22,7 +21,6 @@ export function RootClientLayout({ children }: { children: ReactNode }) {
     // <QueryClientProvider client={client}>
     <NextThemesProvider attribute='class' defaultTheme='light'>
       {children}
-      <Toaster position='top-center' richColors />
     </NextThemesProvider>
     // </QueryClientProvider>
   )

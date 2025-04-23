@@ -1,10 +1,10 @@
 'use client'
 
 import { createDatabase } from '@/actions'
+import { Fieldset } from '@/components/fieldset'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -57,17 +57,19 @@ export function DatabaseFormModal({ children, onAddDatabase, sessionIdentifier }
       <DialogContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-2'>
           <DialogTitle>Add database</DialogTitle>
-          <div>
-            <Label>Database name</Label>
+          <Fieldset label='Database name' error={form.formState.errors.database?.message}>
             <Input {...form.register('database', { required: 'Required field' })} placeholder='Type database name' />
-          </div>
-          <div>
-            <Label>Collection name</Label>
+          </Fieldset>
+          <Fieldset
+            label='Collection name'
+            error={form.formState.errors.collection?.message}
+            info='Collection must be provided because of mongo rules'
+          >
             <Input
               {...form.register('collection', { required: 'Required field' })}
               placeholder='Type collection name'
             />
-          </div>
+          </Fieldset>
           <DialogFooter>
             <Button
               disabled={createDatabaseAction.isPending}

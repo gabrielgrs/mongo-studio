@@ -11,27 +11,23 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import { AlignRight } from 'lucide-react'
-import { WithId } from 'mongodb'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useServerAction } from 'zsa-react'
 import { Content } from './content'
 import { DatabaseList } from './database-list'
-import { Tabs } from './tabs'
-
-type CollectionWithIdentifier = Record<string, { totalItems: number; data: WithId<any>[] }>
 
 export function StudioClient({
   databases: initialDatabases,
   sessionIdentifier,
-}: { databases: string[]; sessionIdentifier: string }) {
-  const ref = useRef<HTMLElement>(null)
-
+}: {
+  databases: string[]
+  sessionIdentifier: string
+}) {
   const [showSidebar, setShowSidebar] = useState(true)
   const [databases, setDatabases] = useState(initialDatabases)
   const [activeTab, setActiveTab] = useState('')
   const [openDatabases, setOpenDatabases] = useState<Record<string, string[]>>({})
-  const [openCollectionsWithIdentifiers, setOpenCollectionsWithIdentifiers] = useState<CollectionWithIdentifier>({})
   const [loadingTab, setLoadingTab] = useState('')
   const [page, setPage] = useState(1)
 
@@ -41,22 +37,6 @@ export function StudioClient({
   const removeDatabaseAction = useServerAction(removeDatabase)
   const removeCollectionAction = useServerAction(removeCollection)
   const getCollectionDataAction = useServerAction(getCollectionData)
-
-  const tabs = Object.keys(openCollectionsWithIdentifiers)
-  const documentsToShow = openCollectionsWithIdentifiers[activeTab]?.data
-  const totalDocuments = openCollectionsWithIdentifiers[activeTab]?.totalItems ?? -1
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        if (window.innerWidth < 768) setShowSidebar(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
 
   const onSelectDatabase = async (id: string, dbName: string) => {
     const tab = `${dbName}.`
@@ -78,7 +58,7 @@ export function StudioClient({
   ) => {
     const tab = `${databaseName}.${collectionName}`
     setLoadingTab(tab)
-    const [res, err] = await getCollectionDataAction.execute({
+    const [_, err] = await getCollectionDataAction.execute({
       identifier: id,
       database: databaseName,
       collection: collectionName,
@@ -87,40 +67,28 @@ export function StudioClient({
     })
     setLoadingTab('')
     if (err) return toast.error(err.message)
-    setOpenCollectionsWithIdentifiers((p) => ({
-      ...p,
-      [tab]: { totalItems: res.totalItems, data: res.data },
-    }))
     setActiveTab(tab)
   }
 
-  const onCloseTab = (tabIdentifier: string) => {
-    const tabIndex = tabs.filter((tab) => tab !== tabIdentifier).findIndex((tab) => tab === tabIdentifier)
-    const t = tabIndex > 0 ? tabs[tabIndex] : tabs[0]
-    setActiveTab(t)
-
-    setOpenCollectionsWithIdentifiers((prev) => {
-      const newData = { ...prev }
-      delete newData[tabIdentifier]
-      return newData
-    })
-  }
-
   const onCreateDocument = async (id: string, database: string, collection: string, data: string) => {
-    const [_, err] = await createDocumentAction.execute({ identifier: sessionIdentifier, database, collection, data })
+    const [_, err] = await createDocumentAction.execute({
+      identifier: sessionIdentifier,
+      database,
+      collection,
+      data,
+    })
     if (err) return toast.error(err.message)
     return onSelectCollection(id, database, collection, page)
   }
 
   const onRemoveCollection = async (id: string, database: string, collectionName: string) => {
-    const [data, err] = await removeCollectionAction.execute({ database, collectionName, identifier: id })
+    const [data, err] = await removeCollectionAction.execute({
+      database,
+      collectionName,
+      identifier: id,
+    })
     if (err) return toast.error(err.message)
 
-    setOpenCollectionsWithIdentifiers((p) => {
-      const newOpenCollectionsWithIdentifiers = { ...p }
-      delete newOpenCollectionsWithIdentifiers[`${data.database}.${data.collectionName}`]
-      return newOpenCollectionsWithIdentifiers
-    })
     setOpenDatabases((p) => {
       const newOpenDatabases = { ...p }
       newOpenDatabases[data.database] = newOpenDatabases[data.database].filter(
@@ -137,7 +105,10 @@ export function StudioClient({
   }
 
   const onRemoveDatabase = async (id: string, database: string) => {
-    const [_, err] = await removeDatabaseAction.execute({ database, identifier: id })
+    const [_, err] = await removeDatabaseAction.execute({
+      database,
+      identifier: id,
+    })
     if (err) return toast.error(err.message)
 
     setDatabases((p) => p.filter((x) => x !== database))
@@ -145,12 +116,6 @@ export function StudioClient({
       const newOpenDatabases = { ...p }
       delete newOpenDatabases[database]
       return newOpenDatabases
-    })
-    setOpenCollectionsWithIdentifiers((p) => {
-      const newOpenCollectionsWithIdentifiers = { ...p }
-      const identifiers = Object.keys(newOpenCollectionsWithIdentifiers).filter((item) => item.includes(database))
-      identifiers.forEach((item) => delete newOpenCollectionsWithIdentifiers[item])
-      return newOpenCollectionsWithIdentifiers
     })
   }
 
@@ -161,7 +126,13 @@ export function StudioClient({
     documentId: string,
     data: string,
   ) => {
-    const [_, err] = await updateDocumentAction.execute({ identifier: id, database, collection, documentId, data })
+    const [_, err] = await updateDocumentAction.execute({
+      identifier: id,
+      database,
+      collection,
+      documentId,
+      data,
+    })
     if (err) return toast.error(err.message)
     return onSelectCollection(id, database, collection, page)
   }
@@ -175,7 +146,7 @@ export function StudioClient({
     >
       <aside
         className={cn(
-          'min-w-3xs border-r fixed md:sticky top-0 left-0 w-full md:w-max backdrop-blur-2xl duration-500 z-20 h-screen',
+          'min-w-3xs border-r fixed md:sticky top-0 left-0 w-full md:w-max backdrop-blur-2xl duration-500 z-20',
           showSidebar ? 'translate-x-0' : 'translate-x-[-100%] md:translate-x-0',
         )}
       >
@@ -198,46 +169,63 @@ export function StudioClient({
       </aside>
 
       <div className='sticky top-0'>
-        <header className='flex justify-start items-start sticky top-0 backdrop-blur-lg z-10'>
-          <div className='py-2'>
-            <Button
-              size='icon'
-              variant='ghost'
-              onClick={() => setShowSidebar((p) => !p)}
-              className='flex md:hidden text-muted-foreground'
-            >
-              <AlignRight />
-            </Button>
-          </div>
-          <Tabs
-            tabs={tabs}
-            onSelectTab={(tab) => setActiveTab(tab)}
-            loadingTab={loadingTab}
-            onCloseTab={onCloseTab}
-            activeTab={activeTab}
-          />
+        <header className='flex justify-start items-center sticky top-0 backdrop-blur-lg z-10 p-2 h-16 border-b'>
+          <Button
+            size='icon'
+            variant='ghost'
+            onClick={() => setShowSidebar((p) => !p)}
+            className='flex md:hidden text-muted-foreground'
+          >
+            <AlignRight />
+          </Button>
+          {getCollectionDataAction.data && (
+            <div>
+              <p className='flex items-center gap-2'>{activeTab}</p>
+              <div className='text-muted-foreground text-sm flex items-center gap-2'>
+                <p>
+                  Total documents: <span className='text-foreground'>{getCollectionDataAction.data.totalItems}</span>
+                </p>
+                <p>
+                  Storage size:{' '}
+                  <span className='text-foreground'>
+                    {(getCollectionDataAction.data.storageSize / (1024 * 1024)).toFixed(3)}
+                    Kb
+                  </span>
+                </p>
+
+                <p>
+                  Total indexes: <span className='text-foreground'>{getCollectionDataAction.data.totalIndexes}</span>
+                </p>
+              </div>
+            </div>
+          )}
         </header>
-        <main className='px-2 py-4'>
-          <Content
-            tabs={tabs}
-            activeTab={activeTab}
-            onCreateDocument={(database, collection, data) =>
-              onCreateDocument(sessionIdentifier, database, collection, data)
-            }
-            documentsToShow={documentsToShow}
-            totalDocuments={totalDocuments}
-            onExecuteQuery={(database, collection, query) =>
-              onSelectCollection(sessionIdentifier, database, collection, page, query)
-            }
-            onUpdateDocument={(database, collection, id, data) =>
-              onUpdateDocument(sessionIdentifier, database, collection, id, data)
-            }
-            onLoadMore={(database, collection) => {
-              setPage((p) => p + 1)
-              onSelectCollection(sessionIdentifier, database, collection, page + 1)
-            }}
-            isLoadingMoreData={getCollectionDataAction.isPending && totalDocuments > 0}
-          />
+        <main className='p-4'>
+          {getCollectionDataAction.data ? (
+            <Content
+              activeTab={activeTab}
+              onCreateDocument={(database, collection, data) =>
+                onCreateDocument(sessionIdentifier, database, collection, data)
+              }
+              documents={getCollectionDataAction.data.documents}
+              onExecuteQuery={(database, collection, query) =>
+                onSelectCollection(sessionIdentifier, database, collection, page, query)
+              }
+              onUpdateDocument={(database, collection, id, data) =>
+                onUpdateDocument(sessionIdentifier, database, collection, id, data)
+              }
+              onLoadMore={(database, collection) => {
+                setPage((p) => p + 1)
+                onSelectCollection(sessionIdentifier, database, collection, page + 1)
+              }}
+              isLoadingMoreData={getCollectionDataAction.isPending && getCollectionDataAction.data?.totalItems > 0}
+              totalDocuments={getCollectionDataAction.data.totalItems}
+            />
+          ) : (
+            <div className='flex items-center justify-center text-muted-foreground'>
+              Select a collection from the sidebar to view documents
+            </div>
+          )}
         </main>
       </div>
     </div>
